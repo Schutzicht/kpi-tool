@@ -112,7 +112,12 @@
         </div>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script>
+        const SUPABASE_URL = 'https://lkyyggkzdptfvlgwjeur.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxreXlnZ2t6ZHB0ZnZsZ3dqZXVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MTk5MDAsImV4cCI6MjA5MTE5NTkwMH0.JSQtJRXVaoF5y6C1G8GPdI21cpqJ8_-wr1Def8tcs-Q';
+        const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
         // ── KPI Definitions (all possible) ──
         const ALL_KPIS = {
             ctr: { id: 'ctr', name: 'CTR', unit: '%', format: 'percentage', direction: 'higher_is_better' },
@@ -161,7 +166,7 @@
         }
 
         // ── Parse & Render ──
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const hash = window.location.hash.slice(1);
             if (!hash) {
                 document.getElementById('clientError').style.display = '';
@@ -169,11 +174,41 @@
             }
 
             let data;
-            try {
-                data = JSON.parse(decodeURIComponent(escape(atob(hash))));
-            } catch (e) {
-                document.getElementById('clientError').style.display = '';
-                return;
+
+            if (hash.startsWith('data:')) {
+                // Legacy: base64-encoded data in URL
+                try {
+                    data = JSON.parse(decodeURIComponent(escape(atob(hash.slice(5)))));
+                } catch (e) {
+                    document.getElementById('clientError').style.display = '';
+                    return;
+                }
+            } else {
+                // Short token: fetch from Supabase
+                if (!sb) {
+                    document.getElementById('clientError').style.display = '';
+                    return;
+                }
+                try {
+                    const { data: row, error } = await sb.from('campaigns').select('data').eq('share_token', hash).single();
+                    if (error || !row) {
+                        document.getElementById('clientError').style.display = '';
+                        return;
+                    }
+                    // Map campaign data to client format
+                    const c = row.data;
+                    data = {
+                        n: c.name,
+                        c: c.client,
+                        sd: c.startDate,
+                        ed: c.endDate,
+                        ctx: c.context,
+                        kpis: c.kpis.map(k => ({ id: k.id, t: k.target, a: k.actual })),
+                    };
+                } catch (e) {
+                    document.getElementById('clientError').style.display = '';
+                    return;
+                }
             }
 
             const main = document.getElementById('clientMain');

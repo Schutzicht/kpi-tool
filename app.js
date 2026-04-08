@@ -2,6 +2,20 @@
    AGENSEA KPI TRACKER — APPLICATION LOGIC
    ============================================ */
 
+// ── Supabase Client ───────────────────────────
+
+const SUPABASE_URL = 'https://lkyyggkzdptfvlgwjeur.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxreXlnZ2t6ZHB0ZnZsZ3dqZXVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MTk5MDAsImV4cCI6MjA5MTE5NTkwMH0.JSQtJRXVaoF5y6C1G8GPdI21cpqJ8_-wr1Def8tcs-Q';
+
+const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+function generateShareToken() {
+    const chars = 'abcdefghijkmnpqrstuvwxyz23456789';
+    let token = '';
+    for (let i = 0; i < 8; i++) token += chars[Math.floor(Math.random() * chars.length)];
+    return token;
+}
+
 // ── KPI Library (all possible KPIs) ───────────
 
 const ALL_KPIS = {
@@ -281,10 +295,11 @@ let currentView = 'dashboard'; // 'dashboard' or 'detail'
 
 // ── Init ──────────────────────────────────────
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadState();
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadState();
     if (campaigns.length === 0) {
         campaigns.push(createCampaign('LinkedIn Ads — Leadgeneratie Q2', 'Voorbeeldklant'));
+        await saveState();
     }
     initBenchmarks();
     renderDashboard();
@@ -299,6 +314,7 @@ function createCampaign(name, client, startDate, endDate, campaignType) {
         name,
         client: client || '',
         campaignType: campaignType || 'leadgen',
+        shareToken: generateShareToken(),
         startDate: startDate || null,
         endDate: endDate || null,
         context: {
@@ -909,8 +925,14 @@ function applyBenchmarkAsTarget(branchKey) {
 
 function generateShareLink() {
     const campaign = getActiveCampaign();
+    const base = window.location.origin + window.location.pathname.replace('index.html', '');
 
-    // Build a minimal data payload
+    // Use short share token if campaign is in Supabase
+    if (campaign.shareToken && supabase) {
+        return base + 'client.html#' + campaign.shareToken;
+    }
+
+    // Fallback: encode data in URL
     const payload = {
         n: campaign.name,
         c: campaign.client,
@@ -923,10 +945,8 @@ function generateShareLink() {
             a: k.actual,
         })),
     };
-
     const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-    const base = window.location.origin + window.location.pathname.replace('index.html', '');
-    return base + 'client.html#' + encoded;
+    return base + 'client.html#data:' + encoded;
 }
 
 // ── Events ────────────────────────────────────
@@ -1044,8 +1064,10 @@ function bindEvents() {
             return;
         }
         if (!confirm(`Weet je zeker dat je "${getActiveCampaign().name}" wilt verwijderen?`)) return;
+        const toDelete = getActiveCampaign();
         campaigns.splice(activeCampaignIndex, 1);
         activeCampaignIndex = Math.max(0, activeCampaignIndex - 1);
+        deleteCampaignFromDB(toDelete);
         saveState();
         showDashboard();
     });
@@ -1297,41 +1319,91 @@ function showToast(message, isError) {
     setTimeout(() => { toast.className = 'import-toast'; }, 3500);
 }
 
-// ── Persistence (localStorage) ────────────────
+// ── Persistence (Supabase + localStorage fallback) ──
 
-function saveState() {
-    try {
-        localStorage.setItem('agensea_kpi_campaigns', JSON.stringify(campaigns));
-        localStorage.setItem('agensea_kpi_active', activeCampaignIndex);
-    } catch (e) {
-        // Silent fail
+function migrateCampaign(c) {
+    if (c.client === undefined) c.client = '';
+    if (!c.campaignType) c.campaignType = 'leadgen';
+    if (!c.shareToken) c.shareToken = generateShareToken();
+    if (!c.context) c.context = { audienceSize: '', budget: '', platform: 'LinkedIn Ads', notes: '' };
+    // Migrate KPIs if they don't match the campaign type
+    const expectedIds = (CAMPAIGN_TYPES[c.campaignType] || CAMPAIGN_TYPES.leadgen).kpiIds;
+    const currentIds = c.kpis.map(k => k.id);
+    if (JSON.stringify(currentIds) !== JSON.stringify(expectedIds)) {
+        c.kpis = expectedIds.map(id => {
+            const existing = c.kpis.find(k => k.id === id);
+            return existing || { id, target: (CAMPAIGN_TYPES[c.campaignType] || CAMPAIGN_TYPES.leadgen).defaults[id] || 0, actual: null };
+        });
     }
 }
 
-function loadState() {
+async function saveState() {
+    // Always save to localStorage as fallback
+    try {
+        localStorage.setItem('agensea_kpi_campaigns', JSON.stringify(campaigns));
+        localStorage.setItem('agensea_kpi_active', activeCampaignIndex);
+    } catch (e) {}
+
+    // Sync to Supabase
+    if (!supabase) return;
+
+    for (const c of campaigns) {
+        if (!c.shareToken) c.shareToken = generateShareToken();
+
+        const row = {
+            share_token: c.shareToken,
+            data: c,
+        };
+
+        if (c.dbId) {
+            // Update existing
+            await supabase.from('campaigns').update({ data: c, updated_at: new Date().toISOString() }).eq('id', c.dbId);
+        } else {
+            // Insert new
+            const { data, error } = await supabase.from('campaigns').insert(row).select().single();
+            if (data) {
+                c.dbId = data.id;
+            }
+        }
+    }
+}
+
+async function loadState() {
+    // Try Supabase first
+    if (supabase) {
+        try {
+            const { data, error } = await supabase.from('campaigns').select('*').order('created_at');
+            if (data && data.length > 0) {
+                campaigns = data.map(row => {
+                    const c = row.data;
+                    c.dbId = row.id;
+                    c.shareToken = row.share_token;
+                    migrateCampaign(c);
+                    return c;
+                });
+                activeCampaignIndex = 0;
+                return;
+            }
+        } catch (e) {
+            console.warn('Supabase load failed, falling back to localStorage');
+        }
+    }
+
+    // Fallback to localStorage
     try {
         const saved = localStorage.getItem('agensea_kpi_campaigns');
         if (saved) {
             campaigns = JSON.parse(saved);
-            // Migrate: add client field if missing
-            campaigns.forEach(c => {
-                if (c.client === undefined) c.client = '';
-                if (!c.campaignType) c.campaignType = 'leadgen';
-                if (!c.context) c.context = { audienceSize: '', budget: '', platform: 'LinkedIn Ads', notes: '' };
-                // Migrate KPIs if they don't match the campaign type
-                const expectedIds = (CAMPAIGN_TYPES[c.campaignType] || CAMPAIGN_TYPES.leadgen).kpiIds;
-                const currentIds = c.kpis.map(k => k.id);
-                if (JSON.stringify(currentIds) !== JSON.stringify(expectedIds)) {
-                    c.kpis = expectedIds.map(id => {
-                        const existing = c.kpis.find(k => k.id === id);
-                        return existing || { id, target: (CAMPAIGN_TYPES[c.campaignType] || CAMPAIGN_TYPES.leadgen).defaults[id] || 0, actual: null };
-                    });
-                }
-            });
+            campaigns.forEach(migrateCampaign);
             activeCampaignIndex = parseInt(localStorage.getItem('agensea_kpi_active') || '0');
             if (activeCampaignIndex >= campaigns.length) activeCampaignIndex = 0;
         }
     } catch (e) {
         campaigns = [];
     }
+}
+
+async function deleteCampaignFromDB(campaign) {
+    if (!supabase || !campaign.dbId) return;
+    await supabase.from('campaigns').delete().eq('id', campaign.dbId);
 }
