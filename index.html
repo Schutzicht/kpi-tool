@@ -18,25 +18,57 @@
     <header class="header">
         <div class="header-inner">
             <div class="logo">agensea<span class="logo-accent">.</span></div>
+            <nav class="header-nav">
+                <button class="nav-tab active" id="navDashboard">Dashboard</button>
+                <button class="nav-tab" id="navDetail" style="display:none;">Campagne</button>
+            </nav>
             <div class="header-label">KPI Tracker</div>
         </div>
     </header>
 
-    <!-- Main container -->
-    <main class="main">
+    <!-- ═══════════════════════════════════════════
+         VIEW: DASHBOARD
+         ═══════════════════════════════════════════ -->
+    <main class="main" id="viewDashboard">
 
-        <!-- Campagne selector -->
-        <section class="campaign-bar">
-            <div class="campaign-bar-left">
-                <label class="label-small">CAMPAGNE</label>
-                <select id="campaignSelect" class="select-campaign">
-                    <option value="0">LinkedIn Ads — Leadgeneratie Q2</option>
-                </select>
+        <section class="dashboard-header">
+            <div>
+                <h1 class="page-title">Dashboard</h1>
+                <p class="page-subtitle">Overzicht van alle campagnes per klant</p>
             </div>
-            <div class="campaign-bar-right">
-                <button class="btn-secondary" id="btnAddCampaign">+ Campagne toevoegen</button>
-                <button class="btn-secondary" id="btnDeleteCampaign">Verwijderen</button>
-                <button class="btn-primary" id="btnExport">Exporteer PDF</button>
+            <div class="dashboard-actions">
+                <button class="btn-primary" id="btnAddCampaignDash">+ Nieuwe campagne</button>
+            </div>
+        </section>
+
+        <!-- Dashboard cards rendered by JS -->
+        <div id="dashboardGrid" class="dashboard-grid"></div>
+
+        <!-- Empty state -->
+        <div id="dashboardEmpty" class="dashboard-empty" style="display:none;">
+            <p>Nog geen campagnes. Voeg je eerste campagne toe om te beginnen.</p>
+        </div>
+
+    </main>
+
+    <!-- ═══════════════════════════════════════════
+         VIEW: CAMPAIGN DETAIL
+         ═══════════════════════════════════════════ -->
+    <main class="main" id="viewDetail" style="display:none;">
+
+        <!-- Back + title -->
+        <section class="detail-top">
+            <button class="btn-back" id="btnBackDashboard">&larr; Dashboard</button>
+            <div class="detail-title-row">
+                <div class="detail-title-editable">
+                    <input type="text" class="inline-edit inline-edit-small" id="detailClientEdit" placeholder="Klantnaam">
+                    <input type="text" class="inline-edit inline-edit-large" id="detailCampaignEdit" placeholder="Campagnenaam">
+                </div>
+                <div class="detail-actions">
+                    <button class="btn-secondary" id="btnShareClient">Deel met klant</button>
+                    <button class="btn-secondary" id="btnDeleteCampaign">Verwijderen</button>
+                    <button class="btn-primary" id="btnExport">Exporteer PDF</button>
+                </div>
             </div>
         </section>
 
@@ -61,7 +93,27 @@
                     <div class="progress-fill" id="progressFill" style="width: 0%"></div>
                     <div class="progress-today" id="progressToday" style="left: 0%"></div>
                 </div>
-                <p class="period-note" id="periodNote">Volume KPI's (Bereik, Impressies) worden automatisch vergeleken met het pro rata target op basis van de verstreken tijd. Ratio KPI's (CTR, CPC, Conversieratio, CPL) worden direct vergeleken.</p>
+                <p class="period-note" id="periodNote">Alle huidige KPI's zijn ratio-gebaseerd en worden direct vergeleken met het volledige target, ongeacht de looptijd.</p>
+            </div>
+        </section>
+
+        <!-- Campaign context -->
+        <section class="context-bar">
+            <div class="context-field">
+                <label class="label-small">DOELGROEPGROOTTE</label>
+                <input type="text" id="ctxAudienceSize" class="context-input" placeholder="bijv. 45.000">
+            </div>
+            <div class="context-field">
+                <label class="label-small">MAANDBUDGET</label>
+                <input type="text" id="ctxBudget" class="context-input" placeholder="bijv. € 2.500">
+            </div>
+            <div class="context-field">
+                <label class="label-small">PLATFORM</label>
+                <input type="text" id="ctxPlatform" class="context-input" placeholder="bijv. LinkedIn Ads" value="LinkedIn Ads">
+            </div>
+            <div class="context-field context-field-wide">
+                <label class="label-small">NOTITIES</label>
+                <input type="text" id="ctxNotes" class="context-input" placeholder="bijv. Focus op decision makers, IT-sector, Nederland">
             </div>
         </section>
 
@@ -141,9 +193,7 @@
                         <th class="col-action">Actie / Advies</th>
                     </tr>
                 </thead>
-                <tbody id="kpiBody">
-                    <!-- Rows generated by JS -->
-                </tbody>
+                <tbody id="kpiBody"></tbody>
             </table>
         </section>
 
@@ -154,24 +204,61 @@
 
     </main>
 
-    <!-- Add campaign modal -->
+    <!-- ═══════════════════════════════════════════
+         MODAL: Add/Edit Campaign
+         ═══════════════════════════════════════════ -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
-            <h3 class="modal-title">Nieuwe campagne toevoegen</h3>
-            <input type="text" id="newCampaignName" class="modal-input" placeholder="Campagnenaam, bijv. LinkedIn Ads — Awareness Q3">
+            <h3 class="modal-title" id="modalTitle">Nieuwe campagne toevoegen</h3>
+            <div class="modal-field">
+                <label class="label-small">KLANTNAAM</label>
+                <input type="text" id="newClientName" class="modal-input" placeholder="bijv. Contemplas">
+            </div>
+            <div class="modal-field">
+                <label class="label-small">CAMPAGNENAAM</label>
+                <input type="text" id="newCampaignName" class="modal-input" placeholder="bijv. LinkedIn Ads — Leadgeneratie Q2">
+            </div>
             <div class="modal-date-row">
                 <div class="modal-date-field">
                     <label class="label-small">STARTDATUM</label>
                     <input type="date" id="newCampaignStart" class="modal-input">
                 </div>
                 <div class="modal-date-field">
-                    <label class="label-small">EINDDATUM</label>
+                    <label class="label-small">LOOPTIJD</label>
+                    <div class="duration-row">
+                        <input type="number" id="newCampaignDuration" class="modal-input duration-input" placeholder="—" min="1">
+                        <select id="newCampaignDurationUnit" class="modal-input duration-select">
+                            <option value="weeks">weken</option>
+                            <option value="months" selected>maanden</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-date-field">
+                    <label class="label-small">OF EINDDATUM</label>
                     <input type="date" id="newCampaignEnd" class="modal-input">
                 </div>
             </div>
             <div class="modal-actions">
                 <button class="btn-secondary" id="btnModalCancel">Annuleren</button>
                 <button class="btn-primary" id="btnModalConfirm">Toevoegen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         MODAL: Share with client
+         ═══════════════════════════════════════════ -->
+    <div class="modal-overlay" id="shareModalOverlay">
+        <div class="modal">
+            <h3 class="modal-title">Delen met klant</h3>
+            <p class="modal-desc">Kopieer onderstaande link en stuur deze naar je klant. De klant ziet een schone, read-only versie van de rapportage.</p>
+            <div class="share-link-wrap">
+                <input type="text" id="shareLink" class="modal-input share-link" readonly>
+                <button class="btn-primary" id="btnCopyLink">Kopieer</button>
+            </div>
+            <p class="share-note" id="shareNote"></p>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="btnShareClose">Sluiten</button>
             </div>
         </div>
     </div>

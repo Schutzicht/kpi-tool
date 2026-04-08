@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campagne Rapportage — Agensea</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Client portal overrides */
+        .client-hero {
+            text-align: center;
+            padding: 48px 40px 32px;
+        }
+        .client-hero .logo {
+            font-size: 1rem;
+            margin-bottom: 24px;
+            color: var(--muted);
+        }
+        .client-title {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 6px;
+        }
+        .client-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        .client-period {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+        .client-context {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }
+        .client-ctx-item {
+            text-align: center;
+        }
+        .client-ctx-label {
+            font-size: 0.55rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--muted);
+            display: block;
+            margin-bottom: 2px;
+        }
+        .client-ctx-value {
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        /* Read-only table: no editable styling */
+        .kpi-table .ro-value {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 0.9rem;
+            font-variant-numeric: tabular-nums;
+        }
+        .client-footer {
+            text-align: center;
+            padding: 40px 20px 60px;
+        }
+        .client-footer p {
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+        .client-error {
+            text-align: center;
+            padding: 120px 40px;
+        }
+        .client-error h2 {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+        .client-error p {
+            color: var(--text-secondary);
+        }
+
+        @media print {
+            .header { display: none !important; }
+            .client-hero { padding-top: 0; }
+            .client-footer { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="grain"></div>
+
+    <header class="header">
+        <div class="header-inner">
+            <div class="logo">agensea<span class="logo-accent">.</span></div>
+            <div class="header-label">Campagne Rapportage</div>
+        </div>
+    </header>
+
+    <main class="main" id="clientMain">
+        <div class="client-error" id="clientError" style="display:none;">
+            <h2>Geen rapportage gevonden</h2>
+            <p>Deze link bevat geen geldige campagnedata. Neem contact op met je accountmanager.</p>
+        </div>
+    </main>
+
+    <script>
+        // ── KPI Definitions (same as main app) ──
+        const KPI_DEFINITIONS = [
+            { id: 'ctr', name: 'CTR', unit: '%', format: 'percentage', direction: 'higher_is_better' },
+            { id: 'cpc', name: 'CPC', unit: '€', format: 'currency', direction: 'lower_is_better' },
+            { id: 'cpm', name: 'CPM', unit: '€', format: 'currency', direction: 'lower_is_better' },
+            { id: 'conversieratio', name: 'Conversieratio', unit: '%', format: 'percentage', direction: 'higher_is_better' },
+            { id: 'cpl', name: 'CPL', unit: '€', format: 'currency', direction: 'lower_is_better' },
+        ];
+
+        function formatValue(value, format) {
+            if (value === null || value === undefined) return '—';
+            switch (format) {
+                case 'number': return Number(value).toLocaleString('nl-NL');
+                case 'percentage': return Number(value).toFixed(2).replace('.', ',') + '%';
+                case 'currency': return '€ ' + Number(value).toFixed(2).replace('.', ',');
+                default: return String(value);
+            }
+        }
+
+        function calculateDeviation(actual, target, direction) {
+            if (actual === null || target === null || target === 0) return null;
+            if (direction === 'higher_is_better') return ((actual - target) / target) * 100;
+            return ((target - actual) / target) * 100;
+        }
+
+        function getStatusClass(dev) {
+            if (dev === null) return 'neutral';
+            if (dev >= 0) return 'green';
+            if (dev >= -20) return 'orange';
+            return 'red';
+        }
+
+        function getStatusLabel(cls) {
+            return { green: 'Op target', orange: 'Aandacht', red: 'Kritiek', neutral: 'Geen data' }[cls];
+        }
+
+        function formatDate(str) {
+            if (!str) return '';
+            return new Date(str).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        // ── Parse & Render ──
+        document.addEventListener('DOMContentLoaded', () => {
+            const hash = window.location.hash.slice(1);
+            if (!hash) {
+                document.getElementById('clientError').style.display = '';
+                return;
+            }
+
+            let data;
+            try {
+                data = JSON.parse(decodeURIComponent(escape(atob(hash))));
+            } catch (e) {
+                document.getElementById('clientError').style.display = '';
+                return;
+            }
+
+            const main = document.getElementById('clientMain');
+
+            // Hero
+            let periodText = '';
+            if (data.sd && data.ed) {
+                periodText = `${formatDate(data.sd)} — ${formatDate(data.ed)}`;
+            }
+
+            let contextHtml = '';
+            if (data.ctx) {
+                const items = [];
+                if (data.ctx.audienceSize) items.push({ label: 'Doelgroep', value: data.ctx.audienceSize });
+                if (data.ctx.budget) items.push({ label: 'Budget', value: data.ctx.budget });
+                if (data.ctx.platform) items.push({ label: 'Platform', value: data.ctx.platform });
+                if (items.length > 0) {
+                    contextHtml = `<div class="client-context">${items.map(i =>
+                        `<div class="client-ctx-item"><span class="client-ctx-label">${i.label}</span><span class="client-ctx-value">${i.value}</span></div>`
+                    ).join('')}</div>`;
+                }
+            }
+
+            // Calculate status counts
+            let greens = 0, oranges = 0, reds = 0, total = 0;
+            data.kpis.forEach(k => {
+                const def = KPI_DEFINITIONS.find(d => d.id === k.id);
+                if (!def || k.a === null) return;
+                total++;
+                const dev = calculateDeviation(k.a, k.t, def.direction);
+                const cls = getStatusClass(dev);
+                if (cls === 'green') greens++;
+                else if (cls === 'orange') oranges++;
+                else if (cls === 'red') reds++;
+            });
+
+            // Summary
+            let badgeCls = '', badgeText = '', summaryText = '';
+            const score = total > 0 ? greens / total : 0;
+            if (total === 0) {
+                badgeText = 'Geen data';
+                summaryText = 'Er zijn nog geen werkelijke resultaten ingevuld.';
+            } else if (score >= 0.8 && reds === 0) {
+                badgeCls = 'good';
+                badgeText = 'Goed op koers';
+                summaryText = `De campagne presteert sterk. ${greens} van de ${total} KPI's zitten op of boven target.`;
+            } else if (reds >= 2 || score < 0.4) {
+                badgeCls = 'critical';
+                badgeText = 'Actie vereist';
+                summaryText = `De campagne vraagt aandacht. ${reds} KPI('s) scoren onder target.`;
+            } else {
+                badgeCls = 'warning';
+                badgeText = 'Aandachtspunten';
+                summaryText = `De campagne presteert gemiddeld. ${greens} KPI('s) op target, ${oranges + reds} vragen aandacht.`;
+            }
+
+            // Build table rows
+            let tableRows = '';
+            data.kpis.forEach(k => {
+                const def = KPI_DEFINITIONS.find(d => d.id === k.id);
+                if (!def) return;
+
+                const dev = calculateDeviation(k.a, k.t, def.direction);
+                const cls = getStatusClass(dev);
+                const label = getStatusLabel(cls);
+
+                let devFormatted = '—';
+                let devCls = 'neutral-val';
+                if (dev !== null) {
+                    const sign = dev >= 0 ? '+' : '';
+                    devFormatted = sign + dev.toFixed(1).replace('.', ',') + '%';
+                    if (dev >= 0) devCls = 'positive';
+                    else if (dev >= -20) devCls = 'warning';
+                    else devCls = 'negative';
+                }
+
+                tableRows += `
+                    <tr>
+                        <td><span class="kpi-name">${def.name}</span><span class="kpi-unit">${def.unit}</span></td>
+                        <td><span class="ro-value">${formatValue(k.t, def.format)}</span></td>
+                        <td><span class="ro-value">${k.a !== null ? formatValue(k.a, def.format) : '—'}</span></td>
+                        <td><span class="status-pill ${cls}"><span class="status-dot"></span>${label}</span></td>
+                        <td><span class="deviation ${devCls}">${devFormatted}</span></td>
+                    </tr>
+                `;
+            });
+
+            main.innerHTML = `
+                <div class="client-hero">
+                    <div class="logo">agensea<span class="logo-accent">.</span></div>
+                    ${data.c ? `<p class="client-subtitle">${data.c}</p>` : ''}
+                    <h1 class="client-title">${data.n}</h1>
+                    ${periodText ? `<p class="client-period">${periodText}</p>` : ''}
+                    ${contextHtml}
+                </div>
+
+                <section class="summary-card">
+                    <div class="summary-header">
+                        <h2 class="summary-title">Samenvatting</h2>
+                        <div class="summary-badge ${badgeCls}">${badgeText}</div>
+                    </div>
+                    <p class="summary-text">${summaryText}</p>
+                    <div class="summary-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">${greens}</span>
+                            <span class="stat-label status-green-text">Op target</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">${oranges}</span>
+                            <span class="stat-label status-orange-text">Aandachtspunt</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">${reds}</span>
+                            <span class="stat-label status-red-text">Kritiek</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="table-wrapper">
+                    <table class="kpi-table">
+                        <thead>
+                            <tr>
+                                <th style="width:15%">KPI</th>
+                                <th style="width:15%">Target</th>
+                                <th style="width:15%">Werkelijk</th>
+                                <th style="width:15%">Status</th>
+                                <th style="width:15%">Afwijking</th>
+                            </tr>
+                        </thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                </section>
+
+                <div class="client-footer">
+                    <p>Rapportage opgesteld door <strong>Agensea</strong> — Voor vragen, neem contact op met je accountmanager.</p>
+                </div>
+            `;
+
+            // Update page title
+            document.title = `${data.n} — Rapportage — Agensea`;
+        });
+    </script>
+</body>
+</html>
