@@ -113,14 +113,20 @@
     </main>
 
     <script>
-        // ── KPI Definitions (same as main app) ──
-        const KPI_DEFINITIONS = [
-            { id: 'ctr', name: 'CTR', unit: '%', format: 'percentage', direction: 'higher_is_better' },
-            { id: 'cpc', name: 'CPC', unit: '€', format: 'currency', direction: 'lower_is_better' },
-            { id: 'cpm', name: 'CPM', unit: '€', format: 'currency', direction: 'lower_is_better' },
-            { id: 'conversieratio', name: 'Conversieratio', unit: '%', format: 'percentage', direction: 'higher_is_better' },
-            { id: 'cpl', name: 'CPL', unit: '€', format: 'currency', direction: 'lower_is_better' },
-        ];
+        // ── KPI Definitions (all possible) ──
+        const ALL_KPIS = {
+            ctr: { id: 'ctr', name: 'CTR', unit: '%', format: 'percentage', direction: 'higher_is_better' },
+            cpc: { id: 'cpc', name: 'CPC', unit: '€', format: 'currency', direction: 'lower_is_better' },
+            cpm: { id: 'cpm', name: 'CPM', unit: '€', format: 'currency', direction: 'lower_is_better' },
+            conversieratio: { id: 'conversieratio', name: 'Conversieratio', unit: '%', format: 'percentage', direction: 'higher_is_better' },
+            cpl: { id: 'cpl', name: 'CPL', unit: '€', format: 'currency', direction: 'lower_is_better' },
+            video_view_rate: { id: 'video_view_rate', name: 'Video view rate', unit: '%', format: 'percentage', direction: 'higher_is_better' },
+            engagement_rate: { id: 'engagement_rate', name: 'Engagement rate', unit: '%', format: 'percentage', direction: 'higher_is_better' },
+            volgers: { id: 'volgers', name: 'Nieuwe volgers', unit: 'volgers', format: 'number', direction: 'higher_is_better' },
+            cpv: { id: 'cpv', name: 'CPV', unit: '€', format: 'currency', direction: 'lower_is_better' },
+            bounce_rate: { id: 'bounce_rate', name: 'Bouncepercentage', unit: '%', format: 'percentage', direction: 'lower_is_better' },
+            time_on_page: { id: 'time_on_page', name: 'Tijd op pagina', unit: 'sec', format: 'number', direction: 'higher_is_better' },
+        };
 
         function formatValue(value, format) {
             if (value === null || value === undefined) return '—';
@@ -194,7 +200,7 @@
             // Calculate status counts
             let greens = 0, oranges = 0, reds = 0, total = 0;
             data.kpis.forEach(k => {
-                const def = KPI_DEFINITIONS.find(d => d.id === k.id);
+                const def = ALL_KPIS[k.id];
                 if (!def || k.a === null) return;
                 total++;
                 const dev = calculateDeviation(k.a, k.t, def.direction);
@@ -227,7 +233,7 @@
             // Build table rows
             let tableRows = '';
             data.kpis.forEach(k => {
-                const def = KPI_DEFINITIONS.find(d => d.id === k.id);
+                const def = ALL_KPIS[k.id];
                 if (!def) return;
 
                 const dev = calculateDeviation(k.a, k.t, def.direction);

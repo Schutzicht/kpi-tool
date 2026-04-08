@@ -441,6 +441,19 @@ body {
     line-height: 1.2;
 }
 
+.type-badge {
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--indigo);
+    background: rgba(45, 63, 224, 0.08);
+    padding: 4px 12px;
+    border-radius: 100px;
+    align-self: flex-start;
+    margin-top: 4px;
+}
+
 /* ── Upload Button ─────────────────────────── */
 
 .btn-upload {
@@ -1286,6 +1299,15 @@ body {
     color: var(--indigo);
     margin-top: 3px;
     opacity: 0.8;
+}
+
+.modal-select {
+    appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23B5B0A8' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 32px;
 }
 
 .modal-input:focus {

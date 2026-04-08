@@ -2,17 +2,11 @@
    AGENSEA KPI TRACKER — APPLICATION LOGIC
    ============================================ */
 
-// ── KPI Definitions ───────────────────────────
+// ── KPI Library (all possible KPIs) ───────────
 
-const KPI_DEFINITIONS = [
-    {
-        id: 'ctr',
-        name: 'CTR',
-        unit: '%',
-        defaultTarget: 0.8,
-        format: 'percentage',
-        direction: 'higher_is_better',
-        scalesWithTime: false,
+const ALL_KPIS = {
+    ctr: {
+        id: 'ctr', name: 'CTR', unit: '%', format: 'percentage', direction: 'higher_is_better', scalesWithTime: false,
         explanations: {
             bad: 'CTR onder target wijst op lage relevantie. Mogelijke oorzaken: advertentie sluit niet aan bij doelgroep, visuals zijn niet opvallend genoeg, of copy is niet overtuigend.',
             good: 'CTR boven target — de advertentie resoneert goed. Sterke combinatie van creative, copy en targeting.',
@@ -22,14 +16,8 @@ const KPI_DEFINITIONS = [
             good: 'Documenteer winnende creative-elementen voor toekomstige campagnes. Schaal budget op bij behoud van CTR.',
         },
     },
-    {
-        id: 'cpc',
-        name: 'CPC',
-        unit: '€',
-        defaultTarget: 3.50,
-        format: 'currency',
-        direction: 'lower_is_better',
-        scalesWithTime: false,
+    cpc: {
+        id: 'cpc', name: 'CPC', unit: '€', format: 'currency', direction: 'lower_is_better', scalesWithTime: false,
         explanations: {
             bad: 'CPC hoger dan target. Dit kan komen door veel concurrentie op de doelgroep, lage CTR (slechte relevantie), of een te brede doelgroep.',
             good: 'CPC onder target — efficiënte kosten per klik. Goede relevantie en weinig concurrentie in de veiling.',
@@ -39,58 +27,146 @@ const KPI_DEFINITIONS = [
             good: 'Behoud huidige strategie. Overweeg budget te verhogen om meer volume te genereren tegen deze gunstige kosten.',
         },
     },
-    {
-        id: 'cpm',
-        name: 'CPM',
-        unit: '€',
-        defaultTarget: 25.00,
-        format: 'currency',
-        direction: 'lower_is_better',
-        scalesWithTime: false,
+    cpm: {
+        id: 'cpm', name: 'CPM', unit: '€', format: 'currency', direction: 'lower_is_better', scalesWithTime: false,
         explanations: {
-            bad: 'CPM hoger dan target. De kosten per 1.000 vertoningen zijn hoog. Mogelijke oorzaken: smalle doelgroep met veel concurrentie, lage relevantiescore, of een duur advertentieformat.',
+            bad: 'CPM hoger dan target. Mogelijke oorzaken: smalle doelgroep met veel concurrentie, lage relevantiescore, of een duur advertentieformat.',
             good: 'CPM onder target — efficiënte vertoning. Goede relevantiescore en gunstige veilingpositie.',
         },
         actions: {
-            bad: 'Verbreed de doelgroep licht om meer inventaris beschikbaar te maken. Test andere advertentieformaten (single image vs. carrousel). Verbeter de relevantiescore via betere creatives.',
+            bad: 'Verbreed de doelgroep licht om meer inventaris beschikbaar te maken. Test andere advertentieformaten. Verbeter de relevantiescore via betere creatives.',
             good: 'Behoud huidige strategie. Overweeg om het bespaarde budget te herinvesteren in volume of nieuwe doelgroepen.',
         },
     },
-    {
-        id: 'conversieratio',
-        name: 'Conversieratio',
-        unit: '%',
-        defaultTarget: 0.6,
-        format: 'percentage',
-        direction: 'higher_is_better',
-        scalesWithTime: false,
+    conversieratio: {
+        id: 'conversieratio', name: 'Conversieratio', unit: '%', format: 'percentage', direction: 'higher_is_better', scalesWithTime: false,
         explanations: {
-            bad: 'Conversieratio onder target. De landingspagina converteert onvoldoende. Mogelijke oorzaken: trage laadtijd, onduidelijke propositie, te veel frictie in het formulier, of mismatch tussen advertentie en landingspagina.',
+            bad: 'Conversieratio onder target. Mogelijke oorzaken: trage laadtijd, onduidelijke propositie, te veel frictie in het formulier, of mismatch tussen advertentie en landingspagina.',
             good: 'Conversieratio boven target — sterke aansluiting tussen advertentie, doelgroep en landingspagina. Het aanbod is relevant.',
         },
         actions: {
-            bad: 'Optimaliseer de landingspagina: verkort het formulier, verduidelijk de propositie, voeg social proof toe. Test A/B-varianten. Controleer mobiele ervaring.',
-            good: 'Analyseer welke elementen bijdragen aan hoge conversie. Gebruik deze inzichten voor andere campagnes en pagina\'s.',
+            bad: 'Optimaliseer de landingspagina: verkort het formulier, verduidelijk de propositie, voeg social proof toe. Test A/B-varianten.',
+            good: 'Analyseer welke elementen bijdragen aan hoge conversie. Gebruik deze inzichten voor andere campagnes.',
         },
     },
-    {
-        id: 'cpl',
-        name: 'CPL',
-        unit: '€',
-        defaultTarget: 175.00,
-        format: 'currency',
-        direction: 'lower_is_better',
-        scalesWithTime: false,
+    cpl: {
+        id: 'cpl', name: 'CPL', unit: '€', format: 'currency', direction: 'lower_is_better', scalesWithTime: false,
         explanations: {
-            bad: 'Cost per lead boven target. Dit is een combinatie van hoge CPC en/of lage conversieratio. De acquisitiekosten zijn te hoog voor een gezond rendement.',
+            bad: 'Cost per lead boven target. Dit is een combinatie van hoge CPC en/of lage conversieratio.',
             good: 'CPL onder target — leads worden efficiënt gegenereerd. Goede balans tussen advertentiekosten en conversiekracht.',
         },
         actions: {
-            bad: 'Focus op het verlagen van CPC (betere CTR) én verhogen van conversieratio (landingspagina-optimalisatie). Dit heeft het meeste impact op CPL.',
-            good: 'Schaal de campagne op. Dit is een gezonde CPL — meer budget kan meer leads opleveren zonder significante kostenverhoging.',
+            bad: 'Focus op het verlagen van CPC (betere CTR) én verhogen van conversieratio (landingspagina-optimalisatie).',
+            good: 'Schaal de campagne op. Meer budget kan meer leads opleveren zonder significante kostenverhoging.',
         },
     },
-];
+    video_view_rate: {
+        id: 'video_view_rate', name: 'Video view rate', unit: '%', format: 'percentage', direction: 'higher_is_better', scalesWithTime: false,
+        explanations: {
+            bad: 'Video view rate onder target. De video houdt kijkers niet vast. Mogelijke oorzaken: eerste seconden niet pakkend genoeg, video te lang, of niet relevant voor de doelgroep.',
+            good: 'Video view rate boven target — de video houdt de aandacht vast. Sterke opening en relevante content voor de doelgroep.',
+        },
+        actions: {
+            bad: 'Maak de eerste 3 seconden sterker (hook). Verkort de video. Test verschillende thumbnails. Overweeg ondertiteling.',
+            good: 'Gebruik deze video als benchmark voor toekomstige content. Test langere varianten om engagement te verdiepen.',
+        },
+    },
+    engagement_rate: {
+        id: 'engagement_rate', name: 'Engagement rate', unit: '%', format: 'percentage', direction: 'higher_is_better', scalesWithTime: false,
+        explanations: {
+            bad: 'Engagement rate onder target. De content genereert weinig interactie. Mogelijke oorzaken: niet prikkelend genoeg, geen duidelijke call-to-action, of verkeerde doelgroep.',
+            good: 'Engagement rate boven target — de content resoneert sterk. Mensen reageren, liken en delen actief.',
+        },
+        actions: {
+            bad: 'Voeg een vraag of stelling toe aan de copy. Gebruik meer persoonlijke/authentieke content. Test verschillende formats (carrousel, video, poll).',
+            good: 'Analyseer welke elementen engagement drijven. Herhaal het format en de tone of voice in toekomstige campagnes.',
+        },
+    },
+    volgers: {
+        id: 'volgers', name: 'Nieuwe volgers', unit: 'volgers', format: 'number', direction: 'higher_is_better', scalesWithTime: true,
+        explanations: {
+            bad: 'Volgersgroei onder target. De campagne trekt onvoldoende nieuwe volgers aan. Mogelijk is de content niet overtuigend genoeg om mensen te laten volgen.',
+            good: 'Volgersgroei boven target — de campagne bouwt effectief een publiek op. Sterke personal brand of company page positioning.',
+        },
+        actions: {
+            bad: 'Zorg dat het profiel/pagina up-to-date en aantrekkelijk is. Voeg een duidelijke reden toe om te volgen. Overweeg Follower Ads.',
+            good: 'Focus nu op het activeren van nieuwe volgers met organische content. Bouw een contentkalender om retentie te waarborgen.',
+        },
+    },
+    cpv: {
+        id: 'cpv', name: 'CPV', unit: '€', format: 'currency', direction: 'lower_is_better', scalesWithTime: false,
+        explanations: {
+            bad: 'Cost per view is hoog. Mogelijke oorzaken: smalle doelgroep, hoge concurrentie, of lage relevantie van de video-content.',
+            good: 'Cost per view onder target — videoweergaven worden efficiënt gegenereerd.',
+        },
+        actions: {
+            bad: 'Test andere doelgroepsegmenten. Verbeter de video-thumbnail en openingsscène. Overweeg een breder targetingprofiel.',
+            good: 'Schaal het budget op om meer views te genereren tegen deze kosten. Test varianten van de video.',
+        },
+    },
+    bounce_rate: {
+        id: 'bounce_rate', name: 'Bouncepercentage', unit: '%', format: 'percentage', direction: 'lower_is_better', scalesWithTime: false,
+        explanations: {
+            bad: 'Bouncepercentage boven target. Bezoekers verlaten de pagina direct. Mogelijke oorzaken: trage laadtijd, mismatch tussen ad en landingspagina, of slechte mobiele ervaring.',
+            good: 'Bouncepercentage onder target — bezoekers blijven op de pagina. Goede aansluiting tussen advertentie en landingspagina.',
+        },
+        actions: {
+            bad: 'Controleer laadtijd (moet <3s). Zorg dat de landingspagina direct de belofte van de ad waarmaakt. Optimaliseer voor mobiel.',
+            good: 'Behoud deze landingspagina-strategie. Overweeg meer pagina\'s op dezelfde manier in te richten.',
+        },
+    },
+    time_on_page: {
+        id: 'time_on_page', name: 'Tijd op pagina', unit: 'sec', format: 'number', direction: 'higher_is_better', scalesWithTime: false,
+        explanations: {
+            bad: 'Bezoekers besteden weinig tijd op de pagina. De content is mogelijk niet boeiend genoeg of de pagina laadt te traag.',
+            good: 'Bezoekers besteden meer tijd dan verwacht op de pagina. De content is relevant en boeiend.',
+        },
+        actions: {
+            bad: 'Maak de content scanbaar (koppen, bullets). Voeg visuele elementen toe. Controleer of de content aansluit bij de advertentiebelofte.',
+            good: 'Overweeg een CTA lager op de pagina te plaatsen om de langere leestijd te benutten.',
+        },
+    },
+};
+
+// ── Campaign Types ────────────────────────────
+
+const CAMPAIGN_TYPES = {
+    leadgen: {
+        name: 'Leadgeneratie',
+        description: 'Leads genereren via formulieren of landingspagina\'s',
+        kpiIds: ['ctr', 'cpc', 'cpm', 'conversieratio', 'cpl'],
+        defaults: { ctr: 0.8, cpc: 3.50, cpm: 25.00, conversieratio: 0.6, cpl: 175.00 },
+    },
+    awareness: {
+        name: 'Awareness / Branding',
+        description: 'Bereik, zichtbaarheid en engagement vergroten',
+        kpiIds: ['cpm', 'ctr', 'video_view_rate', 'engagement_rate', 'volgers'],
+        defaults: { cpm: 20.00, ctr: 0.6, video_view_rate: 25.00, engagement_rate: 1.5, volgers: 50 },
+    },
+    traffic: {
+        name: 'Website Traffic',
+        description: 'Bezoekers naar website of landingspagina sturen',
+        kpiIds: ['ctr', 'cpc', 'cpm', 'bounce_rate', 'time_on_page'],
+        defaults: { ctr: 1.0, cpc: 3.00, cpm: 22.00, bounce_rate: 55.00, time_on_page: 45 },
+    },
+    video: {
+        name: 'Video Views',
+        description: 'Videoweergaven en engagement op videocontent',
+        kpiIds: ['video_view_rate', 'cpv', 'cpm', 'engagement_rate', 'ctr'],
+        defaults: { video_view_rate: 25.00, cpv: 0.08, cpm: 18.00, engagement_rate: 1.8, ctr: 0.5 },
+    },
+};
+
+// Helper to get KPI definitions for a campaign
+function getKPIsForCampaign(campaign) {
+    const type = CAMPAIGN_TYPES[campaign.campaignType] || CAMPAIGN_TYPES.leadgen;
+    return type.kpiIds.map(id => ALL_KPIS[id]).filter(Boolean);
+}
+
+// Legacy support: convert old KPI_DEFINITIONS references
+function getKPIDefinitions(campaign) {
+    return getKPIsForCampaign(campaign);
+}
 
 // ── Benchmarks per branche (LinkedIn Ads) ─────
 
@@ -217,10 +293,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Campaign CRUD ─────────────────────────────
 
-function createCampaign(name, client, startDate, endDate) {
+function createCampaign(name, client, startDate, endDate, campaignType) {
+    const type = CAMPAIGN_TYPES[campaignType] || CAMPAIGN_TYPES.leadgen;
     return {
         name,
         client: client || '',
+        campaignType: campaignType || 'leadgen',
         startDate: startDate || null,
         endDate: endDate || null,
         context: {
@@ -229,9 +307,9 @@ function createCampaign(name, client, startDate, endDate) {
             platform: 'LinkedIn Ads',
             notes: '',
         },
-        kpis: KPI_DEFINITIONS.map(kpi => ({
-            id: kpi.id,
-            target: kpi.defaultTarget,
+        kpis: type.kpiIds.map(id => ({
+            id,
+            target: type.defaults[id] || 0,
             actual: null,
         })),
     };
@@ -266,6 +344,11 @@ function showDetail(index) {
     document.getElementById('detailClientEdit').value = campaign.client || '';
     document.getElementById('detailCampaignEdit').value = campaign.name;
 
+    // Show campaign type badge
+    const typeLabel = document.getElementById('detailTypeLabel');
+    const typeInfo = CAMPAIGN_TYPES[campaign.campaignType] || CAMPAIGN_TYPES.leadgen;
+    if (typeLabel) typeLabel.textContent = typeInfo.name;
+
     renderPeriodBar();
     renderContext();
     renderTable();
@@ -276,7 +359,7 @@ function showDetail(index) {
 
 function getCampaignStatusCounts(campaign) {
     let greens = 0, oranges = 0, reds = 0, total = 0;
-    KPI_DEFINITIONS.forEach((kpi, i) => {
+    getKPIsForCampaign(campaign).forEach((kpi, i) => {
         const data = campaign.kpis[i];
         if (data.actual === null) return;
         total++;
@@ -348,7 +431,7 @@ function renderDashboard() {
 
             // KPI mini-pills
             let kpiPills = '';
-            KPI_DEFINITIONS.forEach((kpi, i) => {
+            getKPIsForCampaign(campaign).forEach((kpi, i) => {
                 const data = campaign.kpis[i];
                 if (data.actual === null) {
                     kpiPills += `<span class="card-kpi neutral">${kpi.name}</span>`;
@@ -495,7 +578,7 @@ function renderTable() {
     tbody.innerHTML = '';
     const campaign = getActiveCampaign();
 
-    KPI_DEFINITIONS.forEach((kpi, index) => {
+    getKPIsForCampaign(campaign).forEach((kpi, index) => {
         const data = campaign.kpis[index];
         const tr = document.createElement('tr');
 
@@ -719,8 +802,8 @@ function onFieldBlur(e) {
     const input = e.target;
     const index = parseInt(input.dataset.kpiIndex);
     const field = input.dataset.field;
-    const kpi = KPI_DEFINITIONS[index];
     const campaign = getActiveCampaign();
+    const kpi = getKPIsForCampaign(campaign)[index];
 
     const parsed = parseValue(input.value);
     campaign.kpis[index][field] = parsed;
@@ -740,10 +823,11 @@ function onFieldKeydown(e) {
 
 function updateAll() {
     const campaign = getActiveCampaign();
+    const kpiDefs = getKPIsForCampaign(campaign);
     const rows = document.querySelectorAll('#kpiBody tr');
 
     rows.forEach((tr, i) => {
-        const kpi = KPI_DEFINITIONS[i];
+        const kpi = kpiDefs[i];
         const data = campaign.kpis[i];
 
         tr.children[3].innerHTML = getStatusPill(data, kpi, campaign);
@@ -787,7 +871,8 @@ function renderBenchmarkTable(branchKey) {
     btn.disabled = false;
     tbody.innerHTML = '';
 
-    KPI_DEFINITIONS.forEach(kpi => {
+    const campaign = getActiveCampaign();
+    getKPIsForCampaign(campaign).forEach(kpi => {
         const bm = branch.kpis[kpi.id];
         if (!bm) return;
 
@@ -810,7 +895,7 @@ function applyBenchmarkAsTarget(branchKey) {
     if (!branch) return;
 
     const campaign = getActiveCampaign();
-    KPI_DEFINITIONS.forEach((kpi, i) => {
+    getKPIsForCampaign(campaign).forEach((kpi, i) => {
         const bm = branch.kpis[kpi.id];
         if (bm) campaign.kpis[i].target = bm.good;
     });
@@ -909,7 +994,8 @@ function bindEvents() {
         if (!name) return;
         const startDate = document.getElementById('newCampaignStart').value || null;
         const endDate = document.getElementById('newCampaignEnd').value || null;
-        campaigns.push(createCampaign(name, client, startDate, endDate));
+        const campaignType = document.getElementById('newCampaignType').value;
+        campaigns.push(createCampaign(name, client, startDate, endDate, campaignType));
         saveState();
         document.getElementById('modalOverlay').classList.remove('active');
 
@@ -1014,8 +1100,7 @@ function bindEvents() {
             saveState();
 
             const kpiNames = Object.keys(result.values).map(id => {
-                const def = KPI_DEFINITIONS.find(k => k.id === id);
-                return def ? def.name : id;
+                return ALL_KPIS[id] ? ALL_KPIS[id].name : id;
             }).join(', ');
 
             showToast(`${applied} KPI's geïmporteerd uit ${result.rowCount} rij(en): ${kpiNames}`);
@@ -1047,6 +1132,7 @@ function openAddModal() {
     document.getElementById('modalOverlay').classList.add('active');
     document.getElementById('newClientName').value = '';
     document.getElementById('newCampaignName').value = '';
+    document.getElementById('newCampaignType').value = 'leadgen';
     document.getElementById('newCampaignStart').value = '';
     document.getElementById('newCampaignDuration').value = '';
     document.getElementById('newCampaignEnd').value = '';
@@ -1088,6 +1174,27 @@ const CSV_COLUMN_MAP = {
     'cpl': 'cpl',
     'cost per result': 'cpl',
     'kosten per resultaat': 'cpl',
+    // Video view rate
+    'video views at 25%': 'video_view_rate',
+    'video views at 50%': 'video_view_rate',
+    'video completion rate': 'video_view_rate',
+    'view rate': 'video_view_rate',
+    'video view rate': 'video_view_rate',
+    'videoweergavepercentage': 'video_view_rate',
+    // Engagement rate
+    'engagement rate': 'engagement_rate',
+    'betrokkenheidspercentage': 'engagement_rate',
+    'engagementpercentage': 'engagement_rate',
+    // Followers / Volgers
+    'follows': 'volgers',
+    'new followers': 'volgers',
+    'follower count': 'volgers',
+    'volgers': 'volgers',
+    'nieuwe volgers': 'volgers',
+    // CPV
+    'cost per video view': 'cpv',
+    'cpv': 'cpv',
+    'kosten per videoweergave': 'cpv',
 };
 
 function parseCSV(text) {
@@ -1173,7 +1280,7 @@ function applyCSVData(csvResult) {
     let applied = 0;
 
     Object.entries(csvResult.values).forEach(([kpiId, value]) => {
-        const kpiIndex = KPI_DEFINITIONS.findIndex(k => k.id === kpiId);
+        const kpiIndex = campaign.kpis.findIndex(k => k.id === kpiId);
         if (kpiIndex !== -1) {
             campaign.kpis[kpiIndex].actual = value;
             applied++;
@@ -1209,7 +1316,17 @@ function loadState() {
             // Migrate: add client field if missing
             campaigns.forEach(c => {
                 if (c.client === undefined) c.client = '';
+                if (!c.campaignType) c.campaignType = 'leadgen';
                 if (!c.context) c.context = { audienceSize: '', budget: '', platform: 'LinkedIn Ads', notes: '' };
+                // Migrate KPIs if they don't match the campaign type
+                const expectedIds = (CAMPAIGN_TYPES[c.campaignType] || CAMPAIGN_TYPES.leadgen).kpiIds;
+                const currentIds = c.kpis.map(k => k.id);
+                if (JSON.stringify(currentIds) !== JSON.stringify(expectedIds)) {
+                    c.kpis = expectedIds.map(id => {
+                        const existing = c.kpis.find(k => k.id === id);
+                        return existing || { id, target: (CAMPAIGN_TYPES[c.campaignType] || CAMPAIGN_TYPES.leadgen).defaults[id] || 0, actual: null };
+                    });
+                }
             });
             activeCampaignIndex = parseInt(localStorage.getItem('agensea_kpi_active') || '0');
             if (activeCampaignIndex >= campaigns.length) activeCampaignIndex = 0;

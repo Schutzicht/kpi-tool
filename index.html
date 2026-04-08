@@ -63,6 +63,7 @@
                 <div class="detail-title-editable">
                     <input type="text" class="inline-edit inline-edit-small" id="detailClientEdit" placeholder="Klantnaam">
                     <input type="text" class="inline-edit inline-edit-large" id="detailCampaignEdit" placeholder="Campagnenaam">
+                    <span class="type-badge" id="detailTypeLabel">Leadgeneratie</span>
                 </div>
                 <div class="detail-actions">
                     <label class="btn-secondary btn-upload" for="csvFileInput">
@@ -222,6 +223,15 @@
             <div class="modal-field">
                 <label class="label-small">CAMPAGNENAAM</label>
                 <input type="text" id="newCampaignName" class="modal-input" placeholder="bijv. LinkedIn Ads — Leadgeneratie Q2">
+            </div>
+            <div class="modal-field">
+                <label class="label-small">CAMPAGNETYPE</label>
+                <select id="newCampaignType" class="modal-input modal-select">
+                    <option value="leadgen">Leadgeneratie — leads via formulieren of LP's</option>
+                    <option value="awareness">Awareness / Branding — bereik, engagement, volgers</option>
+                    <option value="traffic">Website Traffic — bezoekers naar website</option>
+                    <option value="video">Video Views — videoweergaven en engagement</option>
+                </select>
             </div>
             <div class="modal-date-row">
                 <div class="modal-date-field">
