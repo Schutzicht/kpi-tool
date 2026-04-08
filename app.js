@@ -574,7 +574,23 @@ function formatValue(value, format) {
 
 function parseValue(str) {
     if (!str || str === '—') return null;
-    const cleaned = str.replace(/[€%\s.]/g, '').replace(',', '.');
+    let cleaned = str.replace(/[€%\s]/g, '');
+
+    // Detect format: if both dot and comma exist, last one is decimal separator
+    const lastDot = cleaned.lastIndexOf('.');
+    const lastComma = cleaned.lastIndexOf(',');
+
+    if (lastComma > lastDot) {
+        // Dutch: 1.234,56 → remove dots, replace comma
+        cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+    } else if (lastDot > lastComma) {
+        // English: 1,234.56 → remove commas, keep dot
+        cleaned = cleaned.replace(/,/g, '');
+    } else {
+        // Only one or neither: try comma as decimal
+        cleaned = cleaned.replace(',', '.');
+    }
+
     const num = parseFloat(cleaned);
     return isNaN(num) ? null : num;
 }
