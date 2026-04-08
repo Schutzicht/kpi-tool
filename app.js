@@ -7,7 +7,9 @@
 const SUPABASE_URL = 'https://lkyyggkzdptfvlgwjeur.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxreXlnZ2t6ZHB0ZnZsZ3dqZXVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MTk5MDAsImV4cCI6MjA5MTE5NTkwMH0.JSQtJRXVaoF5y6C1G8GPdI21cpqJ8_-wr1Def8tcs-Q';
 
-const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+const db = (typeof window !== 'undefined' && window.supabase && window.supabase.createClient)
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
 
 function generateShareToken() {
     const chars = 'abcdefghijkmnpqrstuvwxyz23456789';
@@ -932,7 +934,7 @@ function generateShareLink() {
     const base = window.location.origin + window.location.pathname.replace('index.html', '');
 
     // Use short share token if campaign is in Supabase
-    if (campaign.shareToken && supabase) {
+    if (campaign.shareToken && db) {
         return base + 'client.html#' + campaign.shareToken;
     }
 
@@ -1349,7 +1351,7 @@ async function saveState() {
     } catch (e) {}
 
     // Sync to Supabase
-    if (!supabase) return;
+    if (!db) return;
 
     try {
         for (const c of campaigns) {
@@ -1361,9 +1363,9 @@ async function saveState() {
             };
 
             if (c.dbId) {
-                await supabase.from('campaigns').update({ data: c, updated_at: new Date().toISOString() }).eq('id', c.dbId);
+                await db.from('campaigns').update({ data: c, updated_at: new Date().toISOString() }).eq('id', c.dbId);
             } else {
-                const { data, error } = await supabase.from('campaigns').insert(row).select().single();
+                const { data, error } = await db.from('campaigns').insert(row).select().single();
                 if (data) {
                     c.dbId = data.id;
                 }
@@ -1376,9 +1378,9 @@ async function saveState() {
 
 async function loadState() {
     // Try Supabase first
-    if (supabase) {
+    if (db) {
         try {
-            const { data, error } = await supabase.from('campaigns').select('*').order('created_at');
+            const { data, error } = await db.from('campaigns').select('*').order('created_at');
             if (data && data.length > 0) {
                 campaigns = data.map(row => {
                     const c = row.data;
@@ -1410,6 +1412,6 @@ async function loadState() {
 }
 
 async function deleteCampaignFromDB(campaign) {
-    if (!supabase || !campaign.dbId) return;
-    await supabase.from('campaigns').delete().eq('id', campaign.dbId);
+    if (!db || !campaign.dbId) return;
+    await db.from('campaigns').delete().eq('id', campaign.dbId);
 }
