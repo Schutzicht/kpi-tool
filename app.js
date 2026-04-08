@@ -993,6 +993,37 @@ function bindEvents() {
         if (e.target === e.currentTarget) e.currentTarget.classList.remove('active');
     });
 
+    // CSV Import
+    document.getElementById('csvFileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            const result = parseCSV(evt.target.result);
+
+            if (!result || Object.keys(result.values).length === 0) {
+                showToast('Geen herkenbare KPI-kolommen gevonden in dit CSV-bestand.', true);
+                e.target.value = '';
+                return;
+            }
+
+            const applied = applyCSVData(result);
+            renderTable();
+            updateAll();
+            saveState();
+
+            const kpiNames = Object.keys(result.values).map(id => {
+                const def = KPI_DEFINITIONS.find(k => k.id === id);
+                return def ? def.name : id;
+            }).join(', ');
+
+            showToast(`${applied} KPI's geïmporteerd uit ${result.rowCount} rij(en): ${kpiNames}`);
+            e.target.value = '';
+        };
+        reader.readAsText(file);
+    });
+
     // Benchmark toggle
     document.getElementById('btnToggleBenchmark').addEventListener('click', () => {
         document.getElementById('benchmarkContent').classList.toggle('open');
@@ -1020,6 +1051,143 @@ function openAddModal() {
     document.getElementById('newCampaignDuration').value = '';
     document.getElementById('newCampaignEnd').value = '';
     setTimeout(() => document.getElementById('newClientName').focus(), 100);
+}
+
+// ── LinkedIn CSV Import ───────────────────────
+
+// Column name mappings (LinkedIn exports in EN/NL/DE)
+const CSV_COLUMN_MAP = {
+    // CTR
+    'click-through rate': 'ctr',
+    'click-through rate (ctr)': 'ctr',
+    'ctr': 'ctr',
+    'doorklikratio': 'ctr',
+    'doorklikratio (ctr)': 'ctr',
+    // CPC
+    'average cpc': 'cpc',
+    'avg. cpc': 'cpc',
+    'gemiddelde cpc': 'cpc',
+    'gem. cpc': 'cpc',
+    'cpc': 'cpc',
+    // CPM
+    'average cpm': 'cpm',
+    'avg. cpm': 'cpm',
+    'gemiddelde cpm': 'cpm',
+    'gem. cpm': 'cpm',
+    'cpm': 'cpm',
+    // Conversieratio
+    'conversion rate': 'conversieratio',
+    'conversieratio': 'conversieratio',
+    'conversiepercentage': 'conversieratio',
+    'conv. rate': 'conversieratio',
+    // CPL / Cost per conversion
+    'cost per conversion': 'cpl',
+    'cost per lead': 'cpl',
+    'kosten per conversie': 'cpl',
+    'kosten per lead': 'cpl',
+    'cpl': 'cpl',
+    'cost per result': 'cpl',
+    'kosten per resultaat': 'cpl',
+};
+
+function parseCSV(text) {
+    const lines = text.trim().split('\n');
+    if (lines.length < 2) return null;
+
+    // Detect separator (comma or semicolon)
+    const sep = lines[0].includes(';') ? ';' : ',';
+
+    // Parse header
+    const headers = parseCSVLine(lines[0], sep).map(h => h.trim().toLowerCase().replace(/"/g, ''));
+
+    // Map headers to our KPI ids
+    const columnMapping = {};
+    headers.forEach((header, colIndex) => {
+        const kpiId = CSV_COLUMN_MAP[header];
+        if (kpiId) {
+            columnMapping[kpiId] = colIndex;
+        }
+    });
+
+    if (Object.keys(columnMapping).length === 0) return null;
+
+    // Parse data rows and aggregate (LinkedIn can export multiple rows per campaign)
+    const values = {};
+    let rowCount = 0;
+
+    for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const cols = parseCSVLine(line, sep);
+        rowCount++;
+
+        Object.entries(columnMapping).forEach(([kpiId, colIndex]) => {
+            if (colIndex >= cols.length) return;
+            let val = cols[colIndex].replace(/"/g, '').trim();
+
+            // Remove % sign and currency symbols
+            val = val.replace(/[%€$]/g, '').trim();
+
+            // Parse number (handle both , and . as decimal)
+            const num = parseValue(val);
+            if (num !== null) {
+                if (!values[kpiId]) values[kpiId] = [];
+                values[kpiId].push(num);
+            }
+        });
+    }
+
+    // For ratio KPIs, take the average; for cost KPIs, take the average too
+    const result = {};
+    Object.entries(values).forEach(([kpiId, nums]) => {
+        const avg = nums.reduce((a, b) => a + b, 0) / nums.length;
+        result[kpiId] = Math.round(avg * 100) / 100;
+    });
+
+    return { values: result, rowCount };
+}
+
+function parseCSVLine(line, sep) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === sep && !inQuotes) {
+            result.push(current);
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    result.push(current);
+    return result;
+}
+
+function applyCSVData(csvResult) {
+    const campaign = getActiveCampaign();
+    let applied = 0;
+
+    Object.entries(csvResult.values).forEach(([kpiId, value]) => {
+        const kpiIndex = KPI_DEFINITIONS.findIndex(k => k.id === kpiId);
+        if (kpiIndex !== -1) {
+            campaign.kpis[kpiIndex].actual = value;
+            applied++;
+        }
+    });
+
+    return applied;
+}
+
+function showToast(message, isError) {
+    const toast = document.getElementById('importToast');
+    toast.textContent = message;
+    toast.className = 'import-toast visible' + (isError ? ' error' : '');
+    setTimeout(() => { toast.className = 'import-toast'; }, 3500);
 }
 
 // ── Persistence (localStorage) ────────────────
