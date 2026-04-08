@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPI Tracker — Agensea</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Grain overlay -->
+    <div class="grain"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="logo">agensea<span class="logo-accent">.</span></div>
+            <div class="header-label">KPI Tracker</div>
+        </div>
+    </header>
+
+    <!-- Main container -->
+    <main class="main">
+
+        <!-- Campagne selector -->
+        <section class="campaign-bar">
+            <div class="campaign-bar-left">
+                <label class="label-small">CAMPAGNE</label>
+                <select id="campaignSelect" class="select-campaign">
+                    <option value="0">LinkedIn Ads — Leadgeneratie Q2</option>
+                </select>
+            </div>
+            <div class="campaign-bar-right">
+                <button class="btn-secondary" id="btnAddCampaign">+ Campagne toevoegen</button>
+                <button class="btn-secondary" id="btnDeleteCampaign">Verwijderen</button>
+                <button class="btn-primary" id="btnExport">Exporteer PDF</button>
+            </div>
+        </section>
+
+        <!-- Campaign period bar -->
+        <section class="period-bar" id="periodBar">
+            <div class="period-dates">
+                <div class="period-field">
+                    <label class="label-small">STARTDATUM</label>
+                    <input type="date" id="dateStart" class="date-input">
+                </div>
+                <div class="period-field">
+                    <label class="label-small">EINDDATUM</label>
+                    <input type="date" id="dateEnd" class="date-input">
+                </div>
+            </div>
+            <div class="period-progress" id="periodProgress">
+                <div class="progress-info">
+                    <span class="progress-label" id="progressLabel">Stel campagneperiode in</span>
+                    <span class="progress-pct" id="progressPct"></span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    <div class="progress-today" id="progressToday" style="left: 0%"></div>
+                </div>
+                <p class="period-note" id="periodNote">Volume KPI's (Bereik, Impressies) worden automatisch vergeleken met het pro rata target op basis van de verstreken tijd. Ratio KPI's (CTR, CPC, Conversieratio, CPL) worden direct vergeleken.</p>
+            </div>
+        </section>
+
+        <!-- Benchmark legend -->
+        <section class="benchmark-section" id="benchmarkSection">
+            <button class="benchmark-toggle" id="btnToggleBenchmark">
+                <span class="benchmark-toggle-text">
+                    <span class="benchmark-icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 12h3V6H2v6zm4.5 0h3V2h-3v10zM11 12h3V8h-3v4z" fill="currentColor"/></svg>
+                    </span>
+                    LinkedIn Ads benchmarks per branche
+                </span>
+                <span class="benchmark-arrow" id="benchmarkArrow">&#8250;</span>
+            </button>
+            <div class="benchmark-content" id="benchmarkContent">
+                <div class="benchmark-controls">
+                    <div class="benchmark-select-wrap">
+                        <label class="label-small">SELECTEER BRANCHE</label>
+                        <select id="benchmarkBranch" class="select-campaign">
+                            <option value="">— Kies een branche —</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" id="btnApplyBenchmark" disabled>Gebruik als target</button>
+                </div>
+                <div class="benchmark-table-wrap" id="benchmarkTableWrap">
+                    <table class="benchmark-table" id="benchmarkTable">
+                        <thead>
+                            <tr>
+                                <th>KPI</th>
+                                <th>Laag</th>
+                                <th>Gemiddeld</th>
+                                <th>Goed</th>
+                                <th>Excellent</th>
+                            </tr>
+                        </thead>
+                        <tbody id="benchmarkBody"></tbody>
+                    </table>
+                </div>
+                <p class="benchmark-disclaimer">Benchmarks zijn gebaseerd op algemene LinkedIn Ads marktdata. Werkelijke resultaten variëren per doelgroep, regio, budget en advertentietype.</p>
+            </div>
+        </section>
+
+        <!-- Summary card -->
+        <section class="summary-card" id="summaryCard">
+            <div class="summary-header">
+                <h2 class="summary-title">Samenvatting</h2>
+                <div class="summary-badge" id="summaryBadge">— Laden</div>
+            </div>
+            <p class="summary-text" id="summaryText">Vul de KPI-waarden in om een samenvatting te genereren.</p>
+            <div class="summary-stats" id="summaryStats">
+                <div class="stat-item">
+                    <span class="stat-value" id="statGreen">0</span>
+                    <span class="stat-label status-green-text">Op target</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="statOrange">0</span>
+                    <span class="stat-label status-orange-text">Aandachtspunt</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="statRed">0</span>
+                    <span class="stat-label status-red-text">Kritiek</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- KPI table -->
+        <section class="table-wrapper">
+            <table class="kpi-table" id="kpiTable">
+                <thead>
+                    <tr>
+                        <th class="col-kpi">KPI</th>
+                        <th class="col-target">Target</th>
+                        <th class="col-actual">Werkelijk</th>
+                        <th class="col-status">Status</th>
+                        <th class="col-deviation">Afwijking</th>
+                        <th class="col-explanation">Toelichting</th>
+                        <th class="col-action">Actie / Advies</th>
+                    </tr>
+                </thead>
+                <tbody id="kpiBody">
+                    <!-- Rows generated by JS -->
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Footer note -->
+        <section class="footer-note">
+            <p>Gegenereerd door <strong>Agensea</strong> — Klik op Target of Werkelijk waarden om aan te passen.</p>
+        </section>
+
+    </main>
+
+    <!-- Add campaign modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h3 class="modal-title">Nieuwe campagne toevoegen</h3>
+            <input type="text" id="newCampaignName" class="modal-input" placeholder="Campagnenaam, bijv. LinkedIn Ads — Awareness Q3">
+            <div class="modal-date-row">
+                <div class="modal-date-field">
+                    <label class="label-small">STARTDATUM</label>
+                    <input type="date" id="newCampaignStart" class="modal-input">
+                </div>
+                <div class="modal-date-field">
+                    <label class="label-small">EINDDATUM</label>
+                    <input type="date" id="newCampaignEnd" class="modal-input">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="btnModalCancel">Annuleren</button>
+                <button class="btn-primary" id="btnModalConfirm">Toevoegen</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
