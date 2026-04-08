@@ -296,10 +296,14 @@ let currentView = 'dashboard'; // 'dashboard' or 'detail'
 // ── Init ──────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadState();
+    try {
+        await loadState();
+    } catch (e) {
+        console.warn('Load failed:', e);
+    }
     if (campaigns.length === 0) {
         campaigns.push(createCampaign('LinkedIn Ads — Leadgeneratie Q2', 'Voorbeeldklant'));
-        await saveState();
+        try { await saveState(); } catch (e) { console.warn('Save failed:', e); }
     }
     initBenchmarks();
     renderDashboard();
@@ -1347,24 +1351,26 @@ async function saveState() {
     // Sync to Supabase
     if (!supabase) return;
 
-    for (const c of campaigns) {
-        if (!c.shareToken) c.shareToken = generateShareToken();
+    try {
+        for (const c of campaigns) {
+            if (!c.shareToken) c.shareToken = generateShareToken();
 
-        const row = {
-            share_token: c.shareToken,
-            data: c,
-        };
+            const row = {
+                share_token: c.shareToken,
+                data: c,
+            };
 
-        if (c.dbId) {
-            // Update existing
-            await supabase.from('campaigns').update({ data: c, updated_at: new Date().toISOString() }).eq('id', c.dbId);
-        } else {
-            // Insert new
-            const { data, error } = await supabase.from('campaigns').insert(row).select().single();
-            if (data) {
-                c.dbId = data.id;
+            if (c.dbId) {
+                await supabase.from('campaigns').update({ data: c, updated_at: new Date().toISOString() }).eq('id', c.dbId);
+            } else {
+                const { data, error } = await supabase.from('campaigns').insert(row).select().single();
+                if (data) {
+                    c.dbId = data.id;
+                }
             }
         }
+    } catch (e) {
+        console.warn('Supabase sync failed:', e);
     }
 }
 
