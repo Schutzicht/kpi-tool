@@ -185,6 +185,12 @@
             </div>
         </section>
 
+        <!-- Campaign KPIs heading -->
+        <section class="section-heading">
+            <h2 class="section-title">Campaign KPI's</h2>
+            <p class="section-subtitle">Prestaties van de advertentiecampagne — gevuld door Agensea of via LinkedIn CSV-import.</p>
+        </section>
+
         <!-- KPI table -->
         <section class="table-wrapper">
             <table class="kpi-table" id="kpiTable">
@@ -201,6 +207,43 @@
                 </thead>
                 <tbody id="kpiBody"></tbody>
             </table>
+        </section>
+
+        <!-- Business KPIs heading -->
+        <section class="section-heading">
+            <h2 class="section-title">Business KPI's</h2>
+            <p class="section-subtitle">Commerciële doelen van de klant — in te vullen door de klant zelf via de deel-link. CAC en ROAS worden automatisch berekend.</p>
+        </section>
+
+        <!-- Business KPIs -->
+        <section class="business-kpis" id="businessKpisSection">
+            <div class="biz-grid">
+                <div class="biz-field">
+                    <label class="label-small">PRODUCTWAARDE</label>
+                    <input type="text" id="bizProductValue" class="biz-input" placeholder="€ 0,00">
+                    <span class="biz-hint">Gemiddelde orderwaarde per sale/lead</span>
+                </div>
+                <div class="biz-field">
+                    <label class="label-small">DOEL (AANTAL)</label>
+                    <input type="text" id="bizGoal" class="biz-input" placeholder="bijv. 25">
+                    <span class="biz-hint">Gewenst aantal sales of leads</span>
+                </div>
+                <div class="biz-field">
+                    <label class="label-small">BUDGET</label>
+                    <input type="text" id="bizBudget" class="biz-input" placeholder="€ 0,00">
+                    <span class="biz-hint">Totaal advertentiebudget voor deze campagne</span>
+                </div>
+                <div class="biz-field biz-field-derived">
+                    <label class="label-small">MAX. CAC</label>
+                    <span class="biz-derived" id="bizCac">—</span>
+                    <span class="biz-hint">Budget ÷ Doel</span>
+                </div>
+                <div class="biz-field biz-field-derived">
+                    <label class="label-small">ROAS-TARGET</label>
+                    <span class="biz-derived" id="bizRoas">—</span>
+                    <span class="biz-hint">(Doel × Productwaarde) ÷ Budget</span>
+                </div>
+            </div>
         </section>
 
         <!-- Footer note -->
