@@ -236,6 +236,7 @@
                         ed: c.endDate,
                         ctx: c.context,
                         bk: c.businessKpis,
+                        aud: Array.isArray(c.audiences) ? c.audiences : [],
                         kpis: c.kpis.map(k => ({ id: k.id, t: k.target, a: k.actual })),
                     };
                 } catch (e) {
@@ -329,6 +330,53 @@
                 `;
             });
 
+            // Audiences block (read-only)
+            function escapeHtml(str) {
+                return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            }
+            function chips(str) {
+                if (!str) return '';
+                return String(str).split(/[,;\n]/).map(s => s.trim()).filter(Boolean)
+                    .map(t => `<span class="chip">${escapeHtml(t)}</span>`).join('');
+            }
+            const audList = Array.isArray(data.aud) ? data.aud : [];
+            let audiencesBlock = '';
+            if (audList.length > 0) {
+                const audFieldDefs = [
+                    { key: 'location',     label: 'Locatie' },
+                    { key: 'jobFunctions', label: 'Functies / titels' },
+                    { key: 'seniority',    label: 'Senioriteit' },
+                    { key: 'companySize',  label: 'Bedrijfsgrootte' },
+                    { key: 'industry',     label: 'Branche' },
+                ];
+                const cardsHtml = audList.map(a => {
+                    const fieldsHtml = audFieldDefs.map(f => {
+                        const val = a[f.key] || '';
+                        if (!val) return '';
+                        return `<div class="audience-field"><label class="label-small">${f.label.toUpperCase()}</label><div class="chip-row">${chips(val)}</div></div>`;
+                    }).filter(Boolean).join('');
+                    const footerParts = [];
+                    if (a.estimatedSize) footerParts.push(`<div class="audience-field audience-field-small"><label class="label-small">GESCHATTE GROOTTE</label><div class="audience-plain">${escapeHtml(a.estimatedSize)}</div></div>`);
+                    if (a.notes) footerParts.push(`<div class="audience-field audience-field-wide"><label class="label-small">UITSLUITINGEN / NOTITIES</label><div class="audience-plain">${escapeHtml(a.notes)}</div></div>`);
+                    return `
+                        <div class="audience-card audience-card-ro">
+                            <div class="audience-card-header"><h3 class="audience-name-ro">${escapeHtml(a.name || 'Doelgroep')}</h3></div>
+                            <div class="audience-grid">${fieldsHtml}</div>
+                            ${footerParts.length ? `<div class="audience-footer">${footerParts.join('')}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+                audiencesBlock = `
+                    <section class="section-heading">
+                        <h2 class="section-title">Doelgroepen</h2>
+                        <p class="section-subtitle">De targeting die in deze campagne wordt gebruikt.</p>
+                    </section>
+                    <section class="audiences-section">
+                        <div class="audience-list">${cardsHtml}</div>
+                    </section>
+                `;
+            }
+
             // Business KPIs block — matches Campaign KPIs table styling
             const bk = data.bk || { productValue: null, margin: null, goal: null, budget: null };
             if (bk.margin === undefined) bk.margin = null;
@@ -398,6 +446,8 @@
                     ${periodText ? `<p class="client-period">${periodText}</p>` : ''}
                     ${contextHtml}
                 </div>
+
+                ${audiencesBlock}
 
                 ${bizBlock}
 

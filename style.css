@@ -1486,6 +1486,156 @@ body {
 }
 
 /* ═══════════════════════════════════════════
+   AUDIENCES
+   ═══════════════════════════════════════════ */
+.audiences-section {
+    max-width: 1280px;
+    margin: 0 auto 32px;
+    padding: 0 40px;
+}
+.audience-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 20px;
+    margin-bottom: 16px;
+}
+.audience-card {
+    background: var(--card-bg, rgba(255,255,255,0.03));
+    border: 1px solid var(--border, rgba(0,0,0,0.08));
+    border-radius: 12px;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.audience-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.audience-name-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed var(--border, rgba(0,0,0,0.12));
+    padding: 6px 0;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+}
+.audience-name-input:focus {
+    border-bottom-color: var(--indigo, #2d3fe0);
+}
+.audience-name-ro {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0;
+}
+.audience-delete-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 6px;
+    transition: all 0.15s;
+}
+.audience-delete-btn:hover {
+    background: rgba(255, 80, 80, 0.1);
+    color: #d04040;
+}
+.audience-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 20px;
+}
+.audience-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.audience-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border, rgba(0,0,0,0.1));
+    padding: 4px 0;
+    font-family: var(--font-body, inherit);
+    font-size: 0.82rem;
+    color: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+}
+.audience-input:focus {
+    border-bottom-color: var(--indigo, #2d3fe0);
+}
+.audience-input::placeholder {
+    color: var(--muted);
+    font-style: italic;
+    font-size: 0.75rem;
+}
+.audience-plain {
+    font-size: 0.82rem;
+    color: var(--text-secondary, inherit);
+}
+.audience-footer {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 14px 20px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border, rgba(0,0,0,0.08));
+}
+.audience-empty {
+    font-size: 0.82rem;
+    color: var(--muted);
+    text-align: center;
+    padding: 24px;
+    border: 1px dashed var(--border, rgba(0,0,0,0.12));
+    border-radius: 12px;
+}
+.audience-add-btn {
+    margin-top: 4px;
+}
+
+/* Chips */
+.chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 22px;
+}
+.chip {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 100px;
+    background: rgba(45, 63, 224, 0.08);
+    color: var(--indigo, #2d3fe0);
+    white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+    .audience-grid {
+        grid-template-columns: 1fr;
+    }
+    .audience-footer {
+        grid-template-columns: 1fr;
+    }
+}
+@media (max-width: 520px) {
+    .audiences-section {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
+
+/* ═══════════════════════════════════════════
    BUSINESS KPIs — CAC compare + save status
    ═══════════════════════════════════════════ */
 .biz-cac-ok {

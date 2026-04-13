@@ -335,6 +335,7 @@ function createCampaign(name, client, startDate, endDate, campaignType) {
             goal: null,
             budget: null,
         },
+        audiences: [],
         kpis: type.kpiIds.map(id => ({
             id,
             target: type.defaults[id] || 0,
@@ -379,9 +380,129 @@ function showDetail(index) {
 
     renderPeriodBar();
     renderContext();
+    renderAudiences();
     renderBusinessKpis();
     renderTable();
     updateAll();
+}
+
+// ── Audiences ─────────────────────────────────
+
+const AUDIENCE_FIELDS = [
+    { key: 'location',     label: 'Locatie',            placeholder: 'bijv. Nederland, België' },
+    { key: 'jobFunctions', label: 'Functies / titels',  placeholder: 'bijv. Marketing, Sales, CEO' },
+    { key: 'seniority',    label: 'Senioriteit',        placeholder: 'bijv. Director, VP, CXO' },
+    { key: 'companySize',  label: 'Bedrijfsgrootte',    placeholder: 'bijv. 51-200, 201-500' },
+    { key: 'industry',     label: 'Branche',            placeholder: 'bijv. IT, SaaS, Financiën' },
+];
+
+function createAudience() {
+    return {
+        name: '',
+        location: '',
+        jobFunctions: '',
+        seniority: '',
+        companySize: '',
+        industry: '',
+        estimatedSize: '',
+        notes: '',
+    };
+}
+
+function parseChips(str) {
+    if (!str) return [];
+    return String(str).split(/[,;\n]/).map(s => s.trim()).filter(Boolean);
+}
+
+function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function renderAudiences() {
+    const campaign = getActiveCampaign();
+    if (!Array.isArray(campaign.audiences)) campaign.audiences = [];
+    const list = document.getElementById('audienceList');
+    list.innerHTML = '';
+
+    if (campaign.audiences.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'audience-empty';
+        empty.textContent = 'Nog geen doelgroepen. Klik op "+ Doelgroep toevoegen".';
+        list.appendChild(empty);
+        return;
+    }
+
+    campaign.audiences.forEach((aud, i) => {
+        list.appendChild(buildAudienceCard(aud, i));
+    });
+}
+
+function buildAudienceCard(aud, index) {
+    const card = document.createElement('div');
+    card.className = 'audience-card';
+
+    const fieldsHtml = AUDIENCE_FIELDS.map(f => {
+        const val = aud[f.key] || '';
+        return `
+            <div class="audience-field">
+                <label class="label-small">${f.label.toUpperCase()}</label>
+                <input type="text" class="audience-input" data-aud-index="${index}" data-aud-key="${f.key}" placeholder="${f.placeholder}" value="${escapeHtml(val)}">
+                <div class="chip-row">${parseChips(val).map(t => `<span class="chip">${escapeHtml(t)}</span>`).join('')}</div>
+            </div>
+        `;
+    }).join('');
+
+    card.innerHTML = `
+        <div class="audience-card-header">
+            <input type="text" class="audience-name-input" data-aud-index="${index}" data-aud-key="name" placeholder="Doelgroepnaam — bijv. Decision Makers NL" value="${escapeHtml(aud.name || '')}">
+            <button class="audience-delete-btn" data-aud-index="${index}" title="Verwijder doelgroep">×</button>
+        </div>
+        <div class="audience-grid">${fieldsHtml}</div>
+        <div class="audience-footer">
+            <div class="audience-field audience-field-small">
+                <label class="label-small">GESCHATTE GROOTTE</label>
+                <input type="text" class="audience-input" data-aud-index="${index}" data-aud-key="estimatedSize" placeholder="bijv. 45.000" value="${escapeHtml(aud.estimatedSize || '')}">
+            </div>
+            <div class="audience-field audience-field-wide">
+                <label class="label-small">UITSLUITINGEN / NOTITIES</label>
+                <input type="text" class="audience-input" data-aud-index="${index}" data-aud-key="notes" placeholder="bijv. exclusie van concurrenten, blacklist" value="${escapeHtml(aud.notes || '')}">
+            </div>
+        </div>
+    `;
+
+    // Wire inputs
+    card.querySelectorAll('.audience-input, .audience-name-input').forEach(input => {
+        input.addEventListener('blur', onAudienceInputBlur);
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
+    });
+    card.querySelector('.audience-delete-btn').addEventListener('click', (e) => {
+        const i = parseInt(e.currentTarget.dataset.audIndex);
+        if (!confirm('Doelgroep verwijderen?')) return;
+        getActiveCampaign().audiences.splice(i, 1);
+        renderAudiences();
+        saveState();
+    });
+
+    return card;
+}
+
+function onAudienceInputBlur(e) {
+    const input = e.target;
+    const i = parseInt(input.dataset.audIndex);
+    const key = input.dataset.audKey;
+    const campaign = getActiveCampaign();
+    if (!campaign.audiences[i]) return;
+    campaign.audiences[i][key] = input.value.trim();
+
+    // Update chip row for tag-like fields
+    const fieldWrap = input.closest('.audience-field');
+    if (fieldWrap) {
+        const chipRow = fieldWrap.querySelector('.chip-row');
+        if (chipRow) {
+            chipRow.innerHTML = parseChips(input.value).map(t => `<span class="chip">${escapeHtml(t)}</span>`).join('');
+        }
+    }
+    saveState();
 }
 
 // ── Business KPIs ─────────────────────────────
@@ -1057,6 +1178,19 @@ function bindEvents() {
         });
     });
 
+    // Add audience
+    document.getElementById('btnAddAudience').addEventListener('click', () => {
+        const campaign = getActiveCampaign();
+        if (!Array.isArray(campaign.audiences)) campaign.audiences = [];
+        campaign.audiences.push(createAudience());
+        renderAudiences();
+        saveState();
+        // Focus the name input of the newly added card
+        const cards = document.querySelectorAll('.audience-card');
+        const last = cards[cards.length - 1];
+        if (last) last.querySelector('.audience-name-input').focus();
+    });
+
     // Business KPI inputs
     const bizFields = [
         { id: 'bizProductValue', key: 'productValue', format: 'currency' },
@@ -1422,6 +1556,7 @@ function migrateCampaign(c) {
     if (!c.campaignType) c.campaignType = 'leadgen';
     if (!c.shareToken) c.shareToken = generateShareToken();
     if (!c.context) c.context = { audienceSize: '', budget: '', platform: 'LinkedIn Ads', notes: '' };
+    if (!Array.isArray(c.audiences)) c.audiences = [];
     if (!c.businessKpis) c.businessKpis = { productValue: null, margin: null, goal: null, budget: null };
     if (c.businessKpis.budget === undefined) c.businessKpis.budget = null;
     if (c.businessKpis.margin === undefined) c.businessKpis.margin = null;
