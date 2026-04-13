@@ -447,6 +447,8 @@ function setLang(lang) {
     currentLang = lang;
     try { localStorage.setItem('agensea_lang', lang); } catch (e) {}
     applyStaticTranslations();
+    // Re-populate benchmark branch names with localized labels
+    if (document.getElementById('benchmarkBranch')) initBenchmarks();
     if (currentView === 'detail') {
         showDetail(activeCampaignIndex);
     } else {
@@ -662,26 +664,161 @@ const CAMPAIGN_TYPES = {
     },
 };
 
-// KPI name / unit overrides per language (English only — NL is the source)
+// Full EN overrides for KPI content (name, unit, explanations, actions)
 const KPI_EN = {
-    ctr:             { name: 'CTR',             unit: '%' },
-    cpc:             { name: 'CPC',             unit: '€' },
-    cpm:             { name: 'CPM',             unit: '€' },
-    conversieratio:  { name: 'Conversion rate', unit: '%' },
-    cpl:             { name: 'CPL',             unit: '€' },
-    video_view_rate: { name: 'Video view rate', unit: '%' },
-    engagement_rate: { name: 'Engagement rate', unit: '%' },
-    volgers:         { name: 'New followers',   unit: 'followers' },
-    cpv:             { name: 'CPV',             unit: '€' },
-    bounce_rate:     { name: 'Bounce rate',     unit: '%' },
-    time_on_page:    { name: 'Time on page',    unit: 'sec' },
+    ctr: {
+        name: 'CTR', unit: '%',
+        explanations: {
+            bad: 'CTR below target indicates low relevance. Possible causes: the ad doesn\'t resonate with the audience, visuals aren\'t eye-catching enough, or the copy isn\'t persuasive.',
+            good: 'CTR above target — the ad resonates well. Strong combination of creative, copy and targeting.',
+        },
+        actions: {
+            bad: 'Test new creatives and ad copy. Narrow the audience to the most relevant segments. Try other ad formats (carousel, video).',
+            good: 'Document the winning creative elements for future campaigns. Scale the budget while maintaining CTR.',
+        },
+    },
+    cpc: {
+        name: 'CPC', unit: '€',
+        explanations: {
+            bad: 'CPC above target. This can be due to heavy competition on the audience, low CTR (poor relevance), or an audience that\'s too broad.',
+            good: 'CPC below target — efficient cost per click. Good relevance and low competition in the auction.',
+        },
+        actions: {
+            bad: 'Improve CTR with better creatives (this lowers CPC). Tighten the audience or test less competitive segments. Consider manual bidding.',
+            good: 'Keep the current strategy. Consider increasing the budget to generate more volume at these favorable costs.',
+        },
+    },
+    cpm: {
+        name: 'CPM', unit: '€',
+        explanations: {
+            bad: 'CPM above target. Possible causes: narrow audience with heavy competition, low relevance score, or an expensive ad format.',
+            good: 'CPM below target — efficient impressions. Good relevance score and favorable auction position.',
+        },
+        actions: {
+            bad: 'Slightly broaden the audience to unlock more inventory. Test other ad formats. Improve the relevance score through better creatives.',
+            good: 'Keep the current strategy. Consider reinvesting the saved budget into volume or new audiences.',
+        },
+    },
+    conversieratio: {
+        name: 'Conversion rate', unit: '%',
+        explanations: {
+            bad: 'Conversion rate below target. Possible causes: slow load time, unclear value proposition, too much friction in the form, or mismatch between ad and landing page.',
+            good: 'Conversion rate above target — strong alignment between ad, audience and landing page. The offer is relevant.',
+        },
+        actions: {
+            bad: 'Optimize the landing page: shorten the form, clarify the value proposition, add social proof. Test A/B variants.',
+            good: 'Analyze which elements drive the high conversion rate. Apply these insights to other campaigns.',
+        },
+    },
+    cpl: {
+        name: 'CPL', unit: '€',
+        explanations: {
+            bad: 'Cost per lead above target. This is a combination of high CPC and/or low conversion rate.',
+            good: 'CPL below target — leads are generated efficiently. Good balance between ad costs and conversion power.',
+        },
+        actions: {
+            bad: 'Focus on lowering CPC (better CTR) and raising the conversion rate (landing page optimization).',
+            good: 'Scale the campaign up. More budget can deliver more leads without significantly raising costs.',
+        },
+    },
+    video_view_rate: {
+        name: 'Video view rate', unit: '%',
+        explanations: {
+            bad: 'Video view rate below target. The video isn\'t holding viewers. Possible causes: the first few seconds aren\'t gripping enough, the video is too long, or it\'s not relevant to the audience.',
+            good: 'Video view rate above target — the video holds attention. Strong opening and relevant content for the audience.',
+        },
+        actions: {
+            bad: 'Make the first 3 seconds stronger (hook). Shorten the video. Test different thumbnails. Consider adding subtitles.',
+            good: 'Use this video as a benchmark for future content. Test longer variants to deepen engagement.',
+        },
+    },
+    engagement_rate: {
+        name: 'Engagement rate', unit: '%',
+        explanations: {
+            bad: 'Engagement rate below target. The content is generating little interaction. Possible causes: not compelling enough, no clear call-to-action, or wrong audience.',
+            good: 'Engagement rate above target — the content resonates strongly. People are actively reacting, liking and sharing.',
+        },
+        actions: {
+            bad: 'Add a question or statement to the copy. Use more personal/authentic content. Test different formats (carousel, video, poll).',
+            good: 'Analyze which elements drive engagement. Repeat the format and tone of voice in future campaigns.',
+        },
+    },
+    volgers: {
+        name: 'New followers', unit: 'followers',
+        explanations: {
+            bad: 'Follower growth below target. The campaign isn\'t attracting enough new followers. The content may not be compelling enough to make people follow.',
+            good: 'Follower growth above target — the campaign is effectively building an audience. Strong personal brand or company page positioning.',
+        },
+        actions: {
+            bad: 'Make sure the profile/page is up-to-date and attractive. Add a clear reason to follow. Consider Follower Ads.',
+            good: 'Now focus on activating new followers with organic content. Build a content calendar to maintain retention.',
+        },
+    },
+    cpv: {
+        name: 'CPV', unit: '€',
+        explanations: {
+            bad: 'Cost per view is high. Possible causes: narrow audience, high competition, or low relevance of the video content.',
+            good: 'Cost per view below target — video views are being generated efficiently.',
+        },
+        actions: {
+            bad: 'Test other audience segments. Improve the video thumbnail and opening scene. Consider a broader targeting profile.',
+            good: 'Scale the budget up to generate more views at this cost level. Test variants of the video.',
+        },
+    },
+    bounce_rate: {
+        name: 'Bounce rate', unit: '%',
+        explanations: {
+            bad: 'Bounce rate above target. Visitors are leaving the page immediately. Possible causes: slow load time, mismatch between ad and landing page, or poor mobile experience.',
+            good: 'Bounce rate below target — visitors stay on the page. Good alignment between ad and landing page.',
+        },
+        actions: {
+            bad: 'Check load time (should be <3s). Make sure the landing page immediately delivers on the ad\'s promise. Optimize for mobile.',
+            good: 'Keep this landing page strategy. Consider setting up more pages the same way.',
+        },
+    },
+    time_on_page: {
+        name: 'Time on page', unit: 'sec',
+        explanations: {
+            bad: 'Visitors are spending little time on the page. The content may not be engaging enough, or the page loads too slowly.',
+            good: 'Visitors spend more time than expected on the page. The content is relevant and engaging.',
+        },
+        actions: {
+            bad: 'Make the content scannable (headings, bullets). Add visual elements. Check that the content matches the ad\'s promise.',
+            good: 'Consider placing a CTA further down the page to take advantage of the longer reading time.',
+        },
+    },
 };
 
 function localizedKpi(kpi) {
     if (currentLang === 'en' && KPI_EN[kpi.id]) {
-        return { ...kpi, name: KPI_EN[kpi.id].name, unit: KPI_EN[kpi.id].unit };
+        const en = KPI_EN[kpi.id];
+        return {
+            ...kpi,
+            name: en.name,
+            unit: en.unit,
+            explanations: en.explanations,
+            actions: en.actions,
+        };
     }
     return kpi;
+}
+
+// Benchmark branch name translations
+const BENCHMARK_NAMES_EN = {
+    tech_saas:                   'Technology / SaaS',
+    financiele_dienstverlening:  'Financial services',
+    gezondheidszorg:             'Healthcare',
+    onderwijs:                   'Education & Training',
+    industrie_manufacturing:     'Industry / Manufacturing',
+    zakelijke_dienstverlening:   'B2B services',
+    recruitment_hr:              'Recruitment / HR',
+    e_commerce_retail:           'E-commerce / Retail',
+    vastgoed_bouw:               'Real estate / Construction',
+    non_profit:                  'Non-profit / Government',
+};
+function localizedBenchmarkName(key) {
+    if (currentLang === 'en' && BENCHMARK_NAMES_EN[key]) return BENCHMARK_NAMES_EN[key];
+    return BENCHMARKS[key] ? BENCHMARKS[key].name : key;
 }
 
 // Helper to get KPI definitions for a campaign
@@ -1687,10 +1824,13 @@ function updateAll() {
 
 function initBenchmarks() {
     const select = document.getElementById('benchmarkBranch');
+    // Clear existing except the placeholder (first option)
+    while (select.options.length > 1) select.remove(1);
     Object.entries(BENCHMARKS).forEach(([key, branch]) => {
         const opt = document.createElement('option');
         opt.value = key;
-        opt.textContent = branch.name;
+        opt.textContent = localizedBenchmarkName(key);
+        opt.dataset.branchKey = key;
         select.appendChild(opt);
     });
 }
@@ -2016,7 +2156,7 @@ function bindEvents() {
     document.getElementById('btnApplyBenchmark').addEventListener('click', () => {
         const branchKey = document.getElementById('benchmarkBranch').value;
         if (!branchKey) return;
-        const branchName = BENCHMARKS[branchKey].name;
+        const branchName = localizedBenchmarkName(branchKey);
         if (!confirm(t('benchmark_apply_confirm', branchName))) return;
         applyBenchmarkAsTarget(branchKey);
     });
