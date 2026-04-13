@@ -404,9 +404,38 @@ function createAudience() {
         seniority: '',
         companySize: '',
         industry: '',
+        mustAlsoMatch: '',
         estimatedSize: '',
         notes: '',
     };
+}
+
+function parseMustAlsoMatch(str) {
+    if (!str) return [];
+    return String(str).split(/\n/).map(line => {
+        const idx = line.indexOf(':');
+        if (idx === -1) {
+            const trimmed = line.trim();
+            if (!trimmed) return null;
+            return { label: '', values: parseChips(trimmed) };
+        }
+        const label = line.slice(0, idx).trim();
+        const rest = line.slice(idx + 1);
+        const values = parseChips(rest);
+        if (!label && values.length === 0) return null;
+        return { label, values };
+    }).filter(Boolean);
+}
+
+function renderMustAlsoMatchBlocks(str) {
+    const blocks = parseMustAlsoMatch(str);
+    if (blocks.length === 0) return '';
+    return blocks.map(b => `
+        <div class="mam-block">
+            ${b.label ? `<span class="mam-label">${escapeHtml(b.label)}</span>` : ''}
+            <div class="chip-row">${b.values.map(v => `<span class="chip">${escapeHtml(v)}</span>`).join('')}</div>
+        </div>
+    `).join('');
 }
 
 function parseChips(str) {
@@ -458,6 +487,11 @@ function buildAudienceCard(aud, index) {
             <button class="audience-delete-btn" data-aud-index="${index}" title="Verwijder doelgroep">×</button>
         </div>
         <div class="audience-grid">${fieldsHtml}</div>
+        <div class="audience-mam">
+            <label class="label-small">MOET OOK VOLDOEN AAN</label>
+            <textarea class="audience-textarea" data-aud-index="${index}" data-aud-key="mustAlsoMatch" rows="3" placeholder="Eén regel per criterium, bijv.:&#10;Groepen: LinkedIn Ads NL, Growth Hackers&#10;Skills: SEO, Google Ads&#10;Job title: Growth, Performance Marketeer">${escapeHtml(aud.mustAlsoMatch || '')}</textarea>
+            <div class="mam-preview">${renderMustAlsoMatchBlocks(aud.mustAlsoMatch || '')}</div>
+        </div>
         <div class="audience-footer">
             <div class="audience-field audience-field-small">
                 <label class="label-small">GESCHATTE GROOTTE</label>
@@ -475,6 +509,18 @@ function buildAudienceCard(aud, index) {
         input.addEventListener('blur', onAudienceInputBlur);
         input.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
     });
+    const mam = card.querySelector('.audience-textarea');
+    if (mam) {
+        mam.addEventListener('blur', (e) => {
+            const i = parseInt(e.target.dataset.audIndex);
+            const campaign = getActiveCampaign();
+            if (!campaign.audiences[i]) return;
+            campaign.audiences[i].mustAlsoMatch = e.target.value;
+            const preview = e.target.parentElement.querySelector('.mam-preview');
+            if (preview) preview.innerHTML = renderMustAlsoMatchBlocks(e.target.value);
+            saveState();
+        });
+    }
     card.querySelector('.audience-delete-btn').addEventListener('click', (e) => {
         const i = parseInt(e.currentTarget.dataset.audIndex);
         if (!confirm('Doelgroep verwijderen?')) return;

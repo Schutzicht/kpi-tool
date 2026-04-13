@@ -1590,6 +1590,53 @@ body {
     padding-top: 12px;
     border-top: 1px dashed var(--border, rgba(0,0,0,0.08));
 }
+.audience-mam {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border, rgba(0,0,0,0.08));
+}
+.audience-textarea {
+    background: transparent;
+    border: 1px solid var(--border, rgba(0,0,0,0.1));
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: var(--font-body, inherit);
+    font-size: 0.78rem;
+    color: inherit;
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.15s;
+    line-height: 1.4;
+}
+.audience-textarea:focus {
+    border-color: var(--indigo, #2d3fe0);
+}
+.audience-textarea::placeholder {
+    color: var(--muted);
+    font-style: italic;
+}
+.mam-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.mam-preview:empty {
+    display: none;
+}
+.mam-block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.mam-label {
+    font-size: 0.62rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+}
 .audience-empty {
     font-size: 0.82rem;
     color: var(--muted);

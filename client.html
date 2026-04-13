@@ -339,6 +339,31 @@
                 return String(str).split(/[,;\n]/).map(s => s.trim()).filter(Boolean)
                     .map(t => `<span class="chip">${escapeHtml(t)}</span>`).join('');
             }
+            function parseMam(str) {
+                if (!str) return [];
+                return String(str).split(/\n/).map(line => {
+                    const idx = line.indexOf(':');
+                    if (idx === -1) {
+                        const trimmed = line.trim();
+                        if (!trimmed) return null;
+                        return { label: '', values: trimmed.split(/[,;]/).map(s => s.trim()).filter(Boolean) };
+                    }
+                    const label = line.slice(0, idx).trim();
+                    const values = line.slice(idx + 1).split(/[,;]/).map(s => s.trim()).filter(Boolean);
+                    if (!label && values.length === 0) return null;
+                    return { label, values };
+                }).filter(Boolean);
+            }
+            function mamBlocks(str) {
+                const blocks = parseMam(str);
+                if (blocks.length === 0) return '';
+                return blocks.map(b => `
+                    <div class="mam-block">
+                        ${b.label ? `<span class="mam-label">${escapeHtml(b.label)}</span>` : ''}
+                        <div class="chip-row">${b.values.map(v => `<span class="chip">${escapeHtml(v)}</span>`).join('')}</div>
+                    </div>
+                `).join('');
+            }
             const audList = Array.isArray(data.aud) ? data.aud : [];
             let audiencesBlock = '';
             if (audList.length > 0) {
@@ -358,10 +383,17 @@
                     const footerParts = [];
                     if (a.estimatedSize) footerParts.push(`<div class="audience-field audience-field-small"><label class="label-small">GESCHATTE GROOTTE</label><div class="audience-plain">${escapeHtml(a.estimatedSize)}</div></div>`);
                     if (a.notes) footerParts.push(`<div class="audience-field audience-field-wide"><label class="label-small">UITSLUITINGEN / NOTITIES</label><div class="audience-plain">${escapeHtml(a.notes)}</div></div>`);
+                    const mamHtml = a.mustAlsoMatch ? `
+                        <div class="audience-mam">
+                            <label class="label-small">MOET OOK VOLDOEN AAN</label>
+                            <div class="mam-preview">${mamBlocks(a.mustAlsoMatch)}</div>
+                        </div>
+                    ` : '';
                     return `
                         <div class="audience-card audience-card-ro">
                             <div class="audience-card-header"><h3 class="audience-name-ro">${escapeHtml(a.name || 'Doelgroep')}</h3></div>
                             <div class="audience-grid">${fieldsHtml}</div>
+                            ${mamHtml}
                             ${footerParts.length ? `<div class="audience-footer">${footerParts.join('')}</div>` : ''}
                         </div>
                     `;
