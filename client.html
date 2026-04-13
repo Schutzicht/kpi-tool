@@ -329,42 +329,48 @@
                 `;
             });
 
-            // Business KPIs block
-            const bk = data.bk || { productValue: null, goal: null, budget: null };
-            const bizValue = (v, fmt) => v !== null && v !== undefined ? formatValue(v, fmt) : '';
+            // Business KPIs block — matches Campaign KPIs table styling
+            const bk = data.bk || { productValue: null, goal: null };
+            const budgetValue = data.ctx ? parseValue(data.ctx.budget) : null;
+            const bizValue = (v, fmt) => v !== null && v !== undefined ? formatValue(v, fmt) : '—';
+            const editAttr = editable ? '' : 'readonly';
             const bizBlock = `
                 <section class="section-heading">
                     <h2 class="section-title">Business KPI's</h2>
-                    <p class="section-subtitle">${editable ? 'Vul hieronder je commerciële doelen in. CAC en ROAS worden automatisch berekend.' : 'Commerciële doelen van de campagne.'}</p>
+                    <p class="section-subtitle">${editable ? 'Vul hieronder je commerciële doelen in. Max. CAC en ROAS-target worden automatisch berekend op basis van het campagnebudget.' : 'Commerciële doelen van de campagne. Max. CAC en ROAS-target worden automatisch berekend.'}</p>
                 </section>
-                <section class="business-kpis">
-                    <div class="biz-grid">
-                        <div class="biz-field">
-                            <label class="label-small">PRODUCTWAARDE</label>
-                            <input type="text" id="cliBizProductValue" class="biz-input" placeholder="€ 0,00" value="${bizValue(bk.productValue, 'currency')}" ${editable ? '' : 'readonly'}>
-                            <span class="biz-hint">Gemiddelde orderwaarde per sale/lead</span>
-                        </div>
-                        <div class="biz-field">
-                            <label class="label-small">DOEL (AANTAL)</label>
-                            <input type="text" id="cliBizGoal" class="biz-input" placeholder="bijv. 25" value="${bizValue(bk.goal, 'number')}" ${editable ? '' : 'readonly'}>
-                            <span class="biz-hint">Gewenst aantal sales of leads</span>
-                        </div>
-                        <div class="biz-field">
-                            <label class="label-small">BUDGET</label>
-                            <input type="text" id="cliBizBudget" class="biz-input" placeholder="€ 0,00" value="${bizValue(bk.budget, 'currency')}" ${editable ? '' : 'readonly'}>
-                            <span class="biz-hint">Totaal advertentiebudget</span>
-                        </div>
-                        <div class="biz-field biz-field-derived">
-                            <label class="label-small">MAX. CAC</label>
-                            <span class="biz-derived" id="cliBizCac">—</span>
-                            <span class="biz-hint">Budget ÷ Doel</span>
-                        </div>
-                        <div class="biz-field biz-field-derived">
-                            <label class="label-small">ROAS-TARGET</label>
-                            <span class="biz-derived" id="cliBizRoas">—</span>
-                            <span class="biz-hint">(Doel × Productwaarde) ÷ Budget</span>
-                        </div>
-                    </div>
+                <section class="table-wrapper">
+                    <table class="kpi-table biz-table">
+                        <thead>
+                            <tr>
+                                <th style="width:22%">Business KPI</th>
+                                <th style="width:22%">Waarde</th>
+                                <th>Uitleg</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="kpi-name">Productwaarde</span><span class="kpi-unit">€ per sale/lead</span></td>
+                                <td><input type="text" id="cliBizProductValue" class="editable" placeholder="—" value="${bizValue(bk.productValue, 'currency')}" ${editAttr}></td>
+                                <td><span class="explanation-text">Wat levert één nieuwe klant, sale of lead je gemiddeld op? Bijvoorbeeld: een cursus van € 500, of een contract van € 2.000 per jaar.</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="kpi-name">Doel</span><span class="kpi-unit">aantal</span></td>
+                                <td><input type="text" id="cliBizGoal" class="editable" placeholder="—" value="${bizValue(bk.goal, 'number')}" ${editAttr}></td>
+                                <td><span class="explanation-text">Hoeveel nieuwe sales of leads wil je uit deze campagne halen? Dit is je zakelijke doelstelling — bijv. 25 nieuwe klanten.</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="kpi-name">Max. CAC</span><span class="kpi-unit">€ per klant</span></td>
+                                <td><span class="ro-value biz-derived-cell" id="cliBizCac">—</span></td>
+                                <td><span class="explanation-text"><strong>Customer Acquisition Cost</strong> — de maximale prijs die je per nieuwe klant/lead mag betalen zonder verlies te draaien. Automatisch berekend als Budget ÷ Doel.</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="kpi-name">ROAS-target</span><span class="kpi-unit">×</span></td>
+                                <td><span class="ro-value biz-derived-cell" id="cliBizRoas">—</span></td>
+                                <td><span class="explanation-text"><strong>Return on Ad Spend</strong> — hoeveel euro je terugverdient per euro advertentiebudget. Een ROAS van 3× betekent: voor elke € 1 ad-kosten komt er € 3 omzet binnen.</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
                     ${editable ? '<p class="biz-save-status" id="cliBizStatus"></p>' : ''}
                 </section>
             `;
@@ -434,13 +440,13 @@
             function updateBizDerived() {
                 const cacEl = document.getElementById('cliBizCac');
                 const roasEl = document.getElementById('cliBizRoas');
-                if (bk.budget && bk.goal && bk.goal > 0) {
-                    cacEl.textContent = formatValue(bk.budget / bk.goal, 'currency');
+                if (budgetValue && bk.goal && bk.goal > 0) {
+                    cacEl.textContent = formatValue(budgetValue / bk.goal, 'currency');
                 } else {
                     cacEl.textContent = '—';
                 }
-                if (bk.productValue && bk.goal && bk.budget && bk.budget > 0) {
-                    const roas = (bk.goal * bk.productValue) / bk.budget;
+                if (bk.productValue && bk.goal && budgetValue && budgetValue > 0) {
+                    const roas = (bk.goal * bk.productValue) / budgetValue;
                     roasEl.textContent = roas.toFixed(2).replace('.', ',') + '×';
                 } else {
                     roasEl.textContent = '—';
@@ -452,7 +458,6 @@
                 const fields = [
                     { id: 'cliBizProductValue', key: 'productValue', format: 'currency' },
                     { id: 'cliBizGoal', key: 'goal', format: 'number' },
-                    { id: 'cliBizBudget', key: 'budget', format: 'currency' },
                 ];
                 const statusEl = document.getElementById('cliBizStatus');
                 fields.forEach(f => {
@@ -466,7 +471,7 @@
                         const parsed = parseValue(e.target.value);
                         bk[f.key] = parsed;
                         fullCampaign.businessKpis = bk;
-                        e.target.value = parsed !== null ? formatValue(parsed, f.format) : '';
+                        e.target.value = parsed !== null ? formatValue(parsed, f.format) : '—';
                         updateBizDerived();
                         statusEl.textContent = 'Opslaan…';
                         statusEl.className = 'biz-save-status saving';

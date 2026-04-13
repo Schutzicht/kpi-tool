@@ -212,38 +212,42 @@
         <!-- Business KPIs heading -->
         <section class="section-heading">
             <h2 class="section-title">Business KPI's</h2>
-            <p class="section-subtitle">Commerciële doelen van de klant — in te vullen door de klant zelf via de deel-link. CAC en ROAS worden automatisch berekend.</p>
+            <p class="section-subtitle">Commerciële doelen van de klant — in te vullen door de klant zelf via de deel-link. Max. CAC en ROAS-target worden automatisch berekend op basis van het maandbudget hierboven.</p>
         </section>
 
-        <!-- Business KPIs -->
-        <section class="business-kpis" id="businessKpisSection">
-            <div class="biz-grid">
-                <div class="biz-field">
-                    <label class="label-small">PRODUCTWAARDE</label>
-                    <input type="text" id="bizProductValue" class="biz-input" placeholder="€ 0,00">
-                    <span class="biz-hint">Gemiddelde orderwaarde per sale/lead</span>
-                </div>
-                <div class="biz-field">
-                    <label class="label-small">DOEL (AANTAL)</label>
-                    <input type="text" id="bizGoal" class="biz-input" placeholder="bijv. 25">
-                    <span class="biz-hint">Gewenst aantal sales of leads</span>
-                </div>
-                <div class="biz-field">
-                    <label class="label-small">BUDGET</label>
-                    <input type="text" id="bizBudget" class="biz-input" placeholder="€ 0,00">
-                    <span class="biz-hint">Totaal advertentiebudget voor deze campagne</span>
-                </div>
-                <div class="biz-field biz-field-derived">
-                    <label class="label-small">MAX. CAC</label>
-                    <span class="biz-derived" id="bizCac">—</span>
-                    <span class="biz-hint">Budget ÷ Doel</span>
-                </div>
-                <div class="biz-field biz-field-derived">
-                    <label class="label-small">ROAS-TARGET</label>
-                    <span class="biz-derived" id="bizRoas">—</span>
-                    <span class="biz-hint">(Doel × Productwaarde) ÷ Budget</span>
-                </div>
-            </div>
+        <!-- Business KPIs table -->
+        <section class="table-wrapper">
+            <table class="kpi-table biz-table">
+                <thead>
+                    <tr>
+                        <th class="col-kpi">Business KPI</th>
+                        <th class="col-target">Waarde</th>
+                        <th class="col-explanation">Uitleg</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="kpi-name">Productwaarde</span><span class="kpi-unit">€ per sale/lead</span></td>
+                        <td><input type="text" id="bizProductValue" class="editable" placeholder="—"></td>
+                        <td><span class="explanation-text">Wat levert één nieuwe klant, sale of lead je gemiddeld op? Bijvoorbeeld: een cursus van € 500, of een contract van € 2.000 per jaar.</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="kpi-name">Doel</span><span class="kpi-unit">aantal</span></td>
+                        <td><input type="text" id="bizGoal" class="editable" placeholder="—"></td>
+                        <td><span class="explanation-text">Hoeveel nieuwe sales of leads wil je uit deze campagne halen? Dit is je zakelijke doelstelling — bijv. 25 nieuwe klanten.</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="kpi-name">Max. CAC</span><span class="kpi-unit">€ per klant</span></td>
+                        <td><span class="ro-value biz-derived-cell" id="bizCac">—</span></td>
+                        <td><span class="explanation-text"><strong>Customer Acquisition Cost</strong> — de maximale prijs die je per nieuwe klant/lead mag betalen zonder verlies te draaien. Automatisch berekend als Budget ÷ Doel.</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="kpi-name">ROAS-target</span><span class="kpi-unit">×</span></td>
+                        <td><span class="ro-value biz-derived-cell" id="bizRoas">—</span></td>
+                        <td><span class="explanation-text"><strong>Return on Ad Spend</strong> — hoeveel euro je terugverdient per euro advertentiebudget. Een ROAS van 3× betekent: voor elke € 1 ad-kosten komt er € 3 omzet binnen.</span></td>
+                    </tr>
+                </tbody>
+            </table>
         </section>
 
         <!-- Footer note -->
