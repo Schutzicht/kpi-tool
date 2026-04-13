@@ -332,6 +332,7 @@ function createCampaign(name, client, startDate, endDate, campaignType) {
         businessKpis: {
             productValue: null,
             goal: null,
+            budget: null,
         },
         kpis: type.kpiIds.map(id => ({
             id,
@@ -387,34 +388,30 @@ function showDetail(index) {
 function renderBusinessKpis() {
     const campaign = getActiveCampaign();
     if (!campaign.businessKpis) {
-        campaign.businessKpis = { productValue: null, goal: null };
+        campaign.businessKpis = { productValue: null, goal: null, budget: null };
     }
     const bk = campaign.businessKpis;
-    document.getElementById('bizProductValue').value = bk.productValue !== null && bk.productValue !== undefined ? formatValue(bk.productValue, 'currency') : '';
-    document.getElementById('bizGoal').value = bk.goal !== null && bk.goal !== undefined ? formatValue(bk.goal, 'number') : '';
+    const fmt = (v, f) => v !== null && v !== undefined ? formatValue(v, f) : '';
+    document.getElementById('bizProductValue').value = fmt(bk.productValue, 'currency');
+    document.getElementById('bizGoal').value = fmt(bk.goal, 'number');
+    document.getElementById('bizBudget').value = fmt(bk.budget, 'currency');
     updateBusinessDerived();
-}
-
-function getCampaignBudget(campaign) {
-    if (!campaign || !campaign.context) return null;
-    return parseValue(campaign.context.budget);
 }
 
 function updateBusinessDerived() {
     const campaign = getActiveCampaign();
     const bk = campaign.businessKpis || {};
-    const budget = getCampaignBudget(campaign);
     const cacEl = document.getElementById('bizCac');
     const roasEl = document.getElementById('bizRoas');
 
-    if (budget && bk.goal && bk.goal > 0) {
-        cacEl.textContent = formatValue(budget / bk.goal, 'currency');
+    if (bk.budget && bk.goal && bk.goal > 0) {
+        cacEl.textContent = formatValue(bk.budget / bk.goal, 'currency');
     } else {
         cacEl.textContent = '—';
     }
 
-    if (bk.productValue && bk.goal && budget && budget > 0) {
-        const roas = (bk.goal * bk.productValue) / budget;
+    if (bk.productValue && bk.goal && bk.budget && bk.budget > 0) {
+        const roas = (bk.goal * bk.productValue) / bk.budget;
         roasEl.textContent = roas.toFixed(2).replace('.', ',') + '×';
     } else {
         roasEl.textContent = '—';
@@ -1042,6 +1039,7 @@ function bindEvents() {
     const bizFields = [
         { id: 'bizProductValue', key: 'productValue', format: 'currency' },
         { id: 'bizGoal', key: 'goal', format: 'number' },
+        { id: 'bizBudget', key: 'budget', format: 'currency' },
     ];
     bizFields.forEach(f => {
         const el = document.getElementById(f.id);
@@ -1053,18 +1051,15 @@ function bindEvents() {
         });
         el.addEventListener('blur', (e) => {
             const campaign = getActiveCampaign();
-            if (!campaign.businessKpis) campaign.businessKpis = { productValue: null, goal: null };
+            if (!campaign.businessKpis) campaign.businessKpis = { productValue: null, goal: null, budget: null };
             const parsed = parseValue(e.target.value);
             campaign.businessKpis[f.key] = parsed;
-            e.target.value = parsed !== null ? formatValue(parsed, f.format) : '—';
+            e.target.value = parsed !== null ? formatValue(parsed, f.format) : '';
             updateBusinessDerived();
             saveState();
         });
         el.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
     });
-
-    // Keep Max. CAC / ROAS in sync when the maandbudget changes
-    document.getElementById('ctxBudget').addEventListener('blur', updateBusinessDerived);
 
     // Date inputs
     document.getElementById('dateStart').addEventListener('change', (e) => {
@@ -1404,7 +1399,8 @@ function migrateCampaign(c) {
     if (!c.campaignType) c.campaignType = 'leadgen';
     if (!c.shareToken) c.shareToken = generateShareToken();
     if (!c.context) c.context = { audienceSize: '', budget: '', platform: 'LinkedIn Ads', notes: '' };
-    if (!c.businessKpis) c.businessKpis = { productValue: null, goal: null };
+    if (!c.businessKpis) c.businessKpis = { productValue: null, goal: null, budget: null };
+    if (c.businessKpis.budget === undefined) c.businessKpis.budget = null;
     // Migrate KPIs if they don't match the campaign type
     const expectedIds = (CAMPAIGN_TYPES[c.campaignType] || CAMPAIGN_TYPES.leadgen).kpiIds;
     const currentIds = c.kpis.map(k => k.id);

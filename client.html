@@ -330,14 +330,13 @@
             });
 
             // Business KPIs block — matches Campaign KPIs table styling
-            const bk = data.bk || { productValue: null, goal: null };
-            const budgetValue = data.ctx ? parseValue(data.ctx.budget) : null;
-            const bizValue = (v, fmt) => v !== null && v !== undefined ? formatValue(v, fmt) : '—';
+            const bk = data.bk || { productValue: null, goal: null, budget: null };
+            const bizValue = (v, fmt) => v !== null && v !== undefined ? formatValue(v, fmt) : '';
             const editAttr = editable ? '' : 'readonly';
             const bizBlock = `
                 <section class="section-heading">
                     <h2 class="section-title">Business KPI's</h2>
-                    <p class="section-subtitle">${editable ? 'Vul hieronder je commerciële doelen in. Max. CAC en ROAS-target worden automatisch berekend op basis van het campagnebudget.' : 'Commerciële doelen van de campagne. Max. CAC en ROAS-target worden automatisch berekend.'}</p>
+                    <p class="section-subtitle">${editable ? 'Vul hieronder je commerciële doelen in. Max. CAC en ROAS-target worden automatisch berekend.' : 'Commerciële doelen van de campagne. Max. CAC en ROAS-target worden automatisch berekend.'}</p>
                 </section>
                 <section class="table-wrapper">
                     <table class="kpi-table biz-table">
@@ -358,6 +357,11 @@
                                 <td><span class="kpi-name">Doel</span><span class="kpi-unit">aantal</span></td>
                                 <td><input type="text" id="cliBizGoal" class="editable" placeholder="—" value="${bizValue(bk.goal, 'number')}" ${editAttr}></td>
                                 <td><span class="explanation-text">Hoeveel nieuwe sales of leads wil je uit deze campagne halen? Dit is je zakelijke doelstelling — bijv. 25 nieuwe klanten.</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="kpi-name">Totaal campagnebudget</span><span class="kpi-unit">€</span></td>
+                                <td><input type="text" id="cliBizBudget" class="editable" placeholder="—" value="${bizValue(bk.budget, 'currency')}" ${editAttr}></td>
+                                <td><span class="explanation-text">Het totale advertentiebudget voor de volledige looptijd van deze campagne. Bijv. 3 maanden × € 2.500 = € 7.500. Dit vormt de basis voor CAC en ROAS.</span></td>
                             </tr>
                             <tr>
                                 <td><span class="kpi-name">Max. CAC</span><span class="kpi-unit">€ per klant</span></td>
@@ -440,13 +444,13 @@
             function updateBizDerived() {
                 const cacEl = document.getElementById('cliBizCac');
                 const roasEl = document.getElementById('cliBizRoas');
-                if (budgetValue && bk.goal && bk.goal > 0) {
-                    cacEl.textContent = formatValue(budgetValue / bk.goal, 'currency');
+                if (bk.budget && bk.goal && bk.goal > 0) {
+                    cacEl.textContent = formatValue(bk.budget / bk.goal, 'currency');
                 } else {
                     cacEl.textContent = '—';
                 }
-                if (bk.productValue && bk.goal && budgetValue && budgetValue > 0) {
-                    const roas = (bk.goal * bk.productValue) / budgetValue;
+                if (bk.productValue && bk.goal && bk.budget && bk.budget > 0) {
+                    const roas = (bk.goal * bk.productValue) / bk.budget;
                     roasEl.textContent = roas.toFixed(2).replace('.', ',') + '×';
                 } else {
                     roasEl.textContent = '—';
@@ -458,6 +462,7 @@
                 const fields = [
                     { id: 'cliBizProductValue', key: 'productValue', format: 'currency' },
                     { id: 'cliBizGoal', key: 'goal', format: 'number' },
+                    { id: 'cliBizBudget', key: 'budget', format: 'currency' },
                 ];
                 const statusEl = document.getElementById('cliBizStatus');
                 fields.forEach(f => {
@@ -471,7 +476,7 @@
                         const parsed = parseValue(e.target.value);
                         bk[f.key] = parsed;
                         fullCampaign.businessKpis = bk;
-                        e.target.value = parsed !== null ? formatValue(parsed, f.format) : '—';
+                        e.target.value = parsed !== null ? formatValue(parsed, f.format) : '';
                         updateBizDerived();
                         statusEl.textContent = 'Opslaan…';
                         statusEl.className = 'biz-save-status saving';
