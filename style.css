@@ -1484,8 +1484,14 @@ body {
 }
 
 /* ═══════════════════════════════════════════
-   BUSINESS KPIs — save status
+   BUSINESS KPIs — CAC compare + save status
    ═══════════════════════════════════════════ */
+.biz-cac-ok {
+    color: #6ee7a8;
+}
+.biz-cac-over {
+    color: #ff7a7a;
+}
 .biz-save-status {
     max-width: 1280px;
     margin: 12px auto 0;

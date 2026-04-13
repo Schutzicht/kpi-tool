@@ -331,6 +331,7 @@ function createCampaign(name, client, startDate, endDate, campaignType) {
         },
         businessKpis: {
             productValue: null,
+            margin: null,
             goal: null,
             budget: null,
         },
@@ -388,11 +389,12 @@ function showDetail(index) {
 function renderBusinessKpis() {
     const campaign = getActiveCampaign();
     if (!campaign.businessKpis) {
-        campaign.businessKpis = { productValue: null, goal: null, budget: null };
+        campaign.businessKpis = { productValue: null, margin: null, goal: null, budget: null };
     }
     const bk = campaign.businessKpis;
     const fmt = (v, f) => v !== null && v !== undefined ? formatValue(v, f) : '';
     document.getElementById('bizProductValue').value = fmt(bk.productValue, 'currency');
+    document.getElementById('bizMargin').value = fmt(bk.margin, 'percentage');
     document.getElementById('bizGoal').value = fmt(bk.goal, 'number');
     document.getElementById('bizBudget').value = fmt(bk.budget, 'currency');
     updateBusinessDerived();
@@ -401,15 +403,35 @@ function renderBusinessKpis() {
 function updateBusinessDerived() {
     const campaign = getActiveCampaign();
     const bk = campaign.businessKpis || {};
-    const cacEl = document.getElementById('bizCac');
+    const plannedEl = document.getElementById('bizPlannedCac');
+    const maxEl = document.getElementById('bizMaxCac');
     const roasEl = document.getElementById('bizRoas');
 
+    // Geplande CAC = Budget ÷ Doel
+    let plannedCac = null;
     if (bk.budget && bk.goal && bk.goal > 0) {
-        cacEl.textContent = formatValue(bk.budget / bk.goal, 'currency');
+        plannedCac = bk.budget / bk.goal;
+        plannedEl.textContent = formatValue(plannedCac, 'currency');
     } else {
-        cacEl.textContent = '—';
+        plannedEl.textContent = '—';
     }
 
+    // Max. CAC = Productwaarde × Winstmarge (alleen als marge ingevuld)
+    let maxCac = null;
+    if (bk.productValue && bk.margin && bk.margin > 0) {
+        maxCac = bk.productValue * (bk.margin / 100);
+        maxEl.textContent = formatValue(maxCac, 'currency');
+    } else {
+        maxEl.textContent = '—';
+    }
+
+    // Kleur Geplande CAC op basis van Max CAC
+    plannedEl.classList.remove('biz-cac-ok', 'biz-cac-over');
+    if (plannedCac !== null && maxCac !== null) {
+        plannedEl.classList.add(plannedCac <= maxCac ? 'biz-cac-ok' : 'biz-cac-over');
+    }
+
+    // ROAS-target = (Doel × Productwaarde) ÷ Budget
     if (bk.productValue && bk.goal && bk.budget && bk.budget > 0) {
         const roas = (bk.goal * bk.productValue) / bk.budget;
         roasEl.textContent = roas.toFixed(2).replace('.', ',') + '×';
@@ -1038,6 +1060,7 @@ function bindEvents() {
     // Business KPI inputs
     const bizFields = [
         { id: 'bizProductValue', key: 'productValue', format: 'currency' },
+        { id: 'bizMargin', key: 'margin', format: 'percentage' },
         { id: 'bizGoal', key: 'goal', format: 'number' },
         { id: 'bizBudget', key: 'budget', format: 'currency' },
     ];
@@ -1051,7 +1074,7 @@ function bindEvents() {
         });
         el.addEventListener('blur', (e) => {
             const campaign = getActiveCampaign();
-            if (!campaign.businessKpis) campaign.businessKpis = { productValue: null, goal: null, budget: null };
+            if (!campaign.businessKpis) campaign.businessKpis = { productValue: null, margin: null, goal: null, budget: null };
             const parsed = parseValue(e.target.value);
             campaign.businessKpis[f.key] = parsed;
             e.target.value = parsed !== null ? formatValue(parsed, f.format) : '';
@@ -1399,8 +1422,9 @@ function migrateCampaign(c) {
     if (!c.campaignType) c.campaignType = 'leadgen';
     if (!c.shareToken) c.shareToken = generateShareToken();
     if (!c.context) c.context = { audienceSize: '', budget: '', platform: 'LinkedIn Ads', notes: '' };
-    if (!c.businessKpis) c.businessKpis = { productValue: null, goal: null, budget: null };
+    if (!c.businessKpis) c.businessKpis = { productValue: null, margin: null, goal: null, budget: null };
     if (c.businessKpis.budget === undefined) c.businessKpis.budget = null;
+    if (c.businessKpis.margin === undefined) c.businessKpis.margin = null;
     // Migrate KPIs if they don't match the campaign type
     const expectedIds = (CAMPAIGN_TYPES[c.campaignType] || CAMPAIGN_TYPES.leadgen).kpiIds;
     const currentIds = c.kpis.map(k => k.id);

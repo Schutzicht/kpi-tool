@@ -232,6 +232,11 @@
                         <td><span class="explanation-text">Wat levert één nieuwe klant, sale of lead je gemiddeld op? Bijvoorbeeld: een cursus van € 500, of een contract van € 2.000 per jaar.</span></td>
                     </tr>
                     <tr>
+                        <td><span class="kpi-name">Winstmarge</span><span class="kpi-unit">% (optioneel)</span></td>
+                        <td><input type="text" id="bizMargin" class="editable" placeholder="—"></td>
+                        <td><span class="explanation-text">Jouw bruto winstmarge op de productwaarde — dus wat er per klant overblijft na inkoop/productkosten, vóór advertentiekosten. Voel je dit te gevoelig om te delen? Laat 'm gewoon leeg — dan tonen we de Max. CAC niet, en werken we alleen met de Geplande CAC en ROAS.</span></td>
+                    </tr>
+                    <tr>
                         <td><span class="kpi-name">Doel</span><span class="kpi-unit">aantal</span></td>
                         <td><input type="text" id="bizGoal" class="editable" placeholder="—"></td>
                         <td><span class="explanation-text">Hoeveel nieuwe sales of leads wil je uit deze campagne halen? Dit is je zakelijke doelstelling — bijv. 25 nieuwe klanten.</span></td>
@@ -242,14 +247,19 @@
                         <td><span class="explanation-text">Het totale advertentiebudget voor de volledige looptijd van deze campagne. Bijv. 3 maanden × € 2.500 = € 7.500. Dit vormt de basis voor CAC en ROAS.</span></td>
                     </tr>
                     <tr>
+                        <td><span class="kpi-name">Geplande CAC</span><span class="kpi-unit">€ per klant</span></td>
+                        <td><span class="ro-value" id="bizPlannedCac">—</span></td>
+                        <td><span class="explanation-text"><strong>Customer Acquisition Cost</strong> — wat je op basis van dit plan per nieuwe klant uitgeeft. Berekend als Budget ÷ Doel. Dit is je <em>verwachte</em> kost per klant, niet per se het maximum.</span></td>
+                    </tr>
+                    <tr>
                         <td><span class="kpi-name">Max. CAC</span><span class="kpi-unit">€ per klant</span></td>
-                        <td><span class="ro-value biz-derived-cell" id="bizCac">—</span></td>
-                        <td><span class="explanation-text"><strong>Customer Acquisition Cost</strong> — de maximale prijs die je per nieuwe klant/lead mag betalen zonder verlies te draaien. Automatisch berekend als Budget ÷ Doel.</span></td>
+                        <td><span class="ro-value" id="bizMaxCac">—</span></td>
+                        <td><span class="explanation-text">Het <strong>absolute plafond</strong>: tot hier kun je per klant uitgeven voordat je verlies draait. Berekend als Productwaarde × Winstmarge. Ligt je Geplande CAC erboven → verlies. Eronder → winst. <em>Alleen zichtbaar als je winstmarge invult.</em></span></td>
                     </tr>
                     <tr>
                         <td><span class="kpi-name">ROAS-target</span><span class="kpi-unit">×</span></td>
-                        <td><span class="ro-value biz-derived-cell" id="bizRoas">—</span></td>
-                        <td><span class="explanation-text"><strong>Return on Ad Spend</strong> — hoeveel euro je terugverdient per euro advertentiebudget. Een ROAS van 3× betekent: voor elke € 1 ad-kosten komt er € 3 omzet binnen.</span></td>
+                        <td><span class="ro-value" id="bizRoas">—</span></td>
+                        <td><span class="explanation-text"><strong>Return on Ad Spend</strong> — hoeveel euro omzet je terugverdient per euro advertentiebudget. Een ROAS van 3× betekent: voor elke € 1 ad-kosten komt er € 3 omzet binnen.</span></td>
                     </tr>
                 </tbody>
             </table>

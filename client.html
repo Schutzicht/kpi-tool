@@ -330,7 +330,8 @@
             });
 
             // Business KPIs block — matches Campaign KPIs table styling
-            const bk = data.bk || { productValue: null, goal: null, budget: null };
+            const bk = data.bk || { productValue: null, margin: null, goal: null, budget: null };
+            if (bk.margin === undefined) bk.margin = null;
             const bizValue = (v, fmt) => v !== null && v !== undefined ? formatValue(v, fmt) : '';
             const editAttr = editable ? '' : 'readonly';
             const bizBlock = `
@@ -354,6 +355,11 @@
                                 <td><span class="explanation-text">Wat levert één nieuwe klant, sale of lead je gemiddeld op? Bijvoorbeeld: een cursus van € 500, of een contract van € 2.000 per jaar.</span></td>
                             </tr>
                             <tr>
+                                <td><span class="kpi-name">Winstmarge</span><span class="kpi-unit">% (optioneel)</span></td>
+                                <td><input type="text" id="cliBizMargin" class="editable" placeholder="—" value="${bizValue(bk.margin, 'percentage')}" ${editAttr}></td>
+                                <td><span class="explanation-text">Jouw bruto winstmarge op de productwaarde — dus wat er per klant overblijft na inkoop/productkosten, vóór advertentiekosten. Vind je dit te gevoelig om te delen? Laat 'm gewoon leeg — dan tonen we de Max. CAC niet, en werken we alleen met de Geplande CAC en ROAS.</span></td>
+                            </tr>
+                            <tr>
                                 <td><span class="kpi-name">Doel</span><span class="kpi-unit">aantal</span></td>
                                 <td><input type="text" id="cliBizGoal" class="editable" placeholder="—" value="${bizValue(bk.goal, 'number')}" ${editAttr}></td>
                                 <td><span class="explanation-text">Hoeveel nieuwe sales of leads wil je uit deze campagne halen? Dit is je zakelijke doelstelling — bijv. 25 nieuwe klanten.</span></td>
@@ -364,14 +370,19 @@
                                 <td><span class="explanation-text">Het totale advertentiebudget voor de volledige looptijd van deze campagne. Bijv. 3 maanden × € 2.500 = € 7.500. Dit vormt de basis voor CAC en ROAS.</span></td>
                             </tr>
                             <tr>
+                                <td><span class="kpi-name">Geplande CAC</span><span class="kpi-unit">€ per klant</span></td>
+                                <td><span class="ro-value" id="cliBizPlannedCac">—</span></td>
+                                <td><span class="explanation-text"><strong>Customer Acquisition Cost</strong> — wat je op basis van dit plan per nieuwe klant uitgeeft. Berekend als Budget ÷ Doel. Dit is je <em>verwachte</em> kost per klant.</span></td>
+                            </tr>
+                            <tr>
                                 <td><span class="kpi-name">Max. CAC</span><span class="kpi-unit">€ per klant</span></td>
-                                <td><span class="ro-value biz-derived-cell" id="cliBizCac">—</span></td>
-                                <td><span class="explanation-text"><strong>Customer Acquisition Cost</strong> — de maximale prijs die je per nieuwe klant/lead mag betalen zonder verlies te draaien. Automatisch berekend als Budget ÷ Doel.</span></td>
+                                <td><span class="ro-value" id="cliBizMaxCac">—</span></td>
+                                <td><span class="explanation-text">Het <strong>absolute plafond</strong>: tot hier kun je per klant uitgeven voordat je verlies draait. Berekend als Productwaarde × Winstmarge. Ligt je Geplande CAC erboven → verlies. Eronder → winst. <em>Alleen zichtbaar als je winstmarge invult.</em></span></td>
                             </tr>
                             <tr>
                                 <td><span class="kpi-name">ROAS-target</span><span class="kpi-unit">×</span></td>
-                                <td><span class="ro-value biz-derived-cell" id="cliBizRoas">—</span></td>
-                                <td><span class="explanation-text"><strong>Return on Ad Spend</strong> — hoeveel euro je terugverdient per euro advertentiebudget. Een ROAS van 3× betekent: voor elke € 1 ad-kosten komt er € 3 omzet binnen.</span></td>
+                                <td><span class="ro-value" id="cliBizRoas">—</span></td>
+                                <td><span class="explanation-text"><strong>Return on Ad Spend</strong> — hoeveel euro omzet je terugverdient per euro advertentiebudget. Een ROAS van 3× betekent: voor elke € 1 ad-kosten komt er € 3 omzet binnen.</span></td>
                             </tr>
                         </tbody>
                     </table>
@@ -442,13 +453,31 @@
 
             // ── Business KPI interactivity ──
             function updateBizDerived() {
-                const cacEl = document.getElementById('cliBizCac');
+                const plannedEl = document.getElementById('cliBizPlannedCac');
+                const maxEl = document.getElementById('cliBizMaxCac');
                 const roasEl = document.getElementById('cliBizRoas');
+
+                let plannedCac = null;
                 if (bk.budget && bk.goal && bk.goal > 0) {
-                    cacEl.textContent = formatValue(bk.budget / bk.goal, 'currency');
+                    plannedCac = bk.budget / bk.goal;
+                    plannedEl.textContent = formatValue(plannedCac, 'currency');
                 } else {
-                    cacEl.textContent = '—';
+                    plannedEl.textContent = '—';
                 }
+
+                let maxCac = null;
+                if (bk.productValue && bk.margin && bk.margin > 0) {
+                    maxCac = bk.productValue * (bk.margin / 100);
+                    maxEl.textContent = formatValue(maxCac, 'currency');
+                } else {
+                    maxEl.textContent = '—';
+                }
+
+                plannedEl.classList.remove('biz-cac-ok', 'biz-cac-over');
+                if (plannedCac !== null && maxCac !== null) {
+                    plannedEl.classList.add(plannedCac <= maxCac ? 'biz-cac-ok' : 'biz-cac-over');
+                }
+
                 if (bk.productValue && bk.goal && bk.budget && bk.budget > 0) {
                     const roas = (bk.goal * bk.productValue) / bk.budget;
                     roasEl.textContent = roas.toFixed(2).replace('.', ',') + '×';
@@ -461,6 +490,7 @@
             if (editable) {
                 const fields = [
                     { id: 'cliBizProductValue', key: 'productValue', format: 'currency' },
+                    { id: 'cliBizMargin', key: 'margin', format: 'percentage' },
                     { id: 'cliBizGoal', key: 'goal', format: 'number' },
                     { id: 'cliBizBudget', key: 'budget', format: 'currency' },
                 ];
