@@ -19,10 +19,16 @@
         <div class="header-inner">
             <div class="logo">agensea<span class="logo-accent">.</span></div>
             <nav class="header-nav">
-                <button class="nav-tab active" id="navDashboard">Dashboard</button>
-                <button class="nav-tab" id="navDetail" style="display:none;">Campagne</button>
+                <button class="nav-tab active" id="navDashboard" data-i18n="nav_dashboard">Dashboard</button>
+                <button class="nav-tab" id="navDetail" style="display:none;" data-i18n="nav_campaign">Campagne</button>
             </nav>
-            <div class="header-label">KPI Tracker</div>
+            <div class="header-right">
+                <div class="lang-switch">
+                    <button class="lang-btn" data-lang="nl">NL</button>
+                    <button class="lang-btn" data-lang="en">EN</button>
+                </div>
+                <div class="header-label" data-i18n="app_label">KPI Tracker</div>
+            </div>
         </div>
     </header>
 
@@ -33,11 +39,11 @@
 
         <section class="dashboard-header">
             <div>
-                <h1 class="page-title">Dashboard</h1>
-                <p class="page-subtitle">Overzicht van alle campagnes per klant</p>
+                <h1 class="page-title" data-i18n="dashboard_title">Dashboard</h1>
+                <p class="page-subtitle" data-i18n="dashboard_subtitle">Overzicht van alle campagnes per klant</p>
             </div>
             <div class="dashboard-actions">
-                <button class="btn-primary" id="btnAddCampaignDash">+ Nieuwe campagne</button>
+                <button class="btn-primary" id="btnAddCampaignDash" data-i18n="btn_new_campaign">+ Nieuwe campagne</button>
             </div>
         </section>
 
@@ -46,7 +52,7 @@
 
         <!-- Empty state -->
         <div id="dashboardEmpty" class="dashboard-empty" style="display:none;">
-            <p>Nog geen campagnes. Voeg je eerste campagne toe om te beginnen.</p>
+            <p data-i18n="dashboard_empty">Nog geen campagnes. Voeg je eerste campagne toe om te beginnen.</p>
         </div>
 
     </main>
@@ -58,22 +64,22 @@
 
         <!-- Back + title -->
         <section class="detail-top">
-            <button class="btn-back" id="btnBackDashboard">&larr; Dashboard</button>
+            <button class="btn-back" id="btnBackDashboard" data-i18n="btn_back_dashboard">&larr; Dashboard</button>
             <div class="detail-title-row">
                 <div class="detail-title-editable">
-                    <input type="text" class="inline-edit inline-edit-small" id="detailClientEdit" placeholder="Klantnaam">
-                    <input type="text" class="inline-edit inline-edit-large" id="detailCampaignEdit" placeholder="Campagnenaam">
+                    <input type="text" class="inline-edit inline-edit-small" id="detailClientEdit" placeholder="Klantnaam" data-i18n-ph="client_label">
+                    <input type="text" class="inline-edit inline-edit-large" id="detailCampaignEdit" placeholder="Campagnenaam" data-i18n-ph="campaign_label">
                     <span class="type-badge" id="detailTypeLabel">Leadgeneratie</span>
                 </div>
                 <div class="detail-actions">
                     <label class="btn-secondary btn-upload" for="csvFileInput">
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="vertical-align:-2px;margin-right:4px;"><path d="M7 1v9M3.5 4.5L7 1l3.5 3.5M1 10v2h12v-2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        LinkedIn CSV
+                        <span data-i18n="btn_upload_csv">LinkedIn CSV</span>
                     </label>
                     <input type="file" id="csvFileInput" accept=".csv" style="display:none;">
-                    <button class="btn-secondary" id="btnShareClient">Deel met klant</button>
-                    <button class="btn-secondary" id="btnDeleteCampaign">Verwijderen</button>
-                    <button class="btn-primary" id="btnExport">Exporteer PDF</button>
+                    <button class="btn-secondary" id="btnShareClient" data-i18n="btn_share_client">Deel met klant</button>
+                    <button class="btn-secondary" id="btnDeleteCampaign" data-i18n="btn_delete_campaign">Verwijderen</button>
+                    <button class="btn-primary" id="btnExport" data-i18n="btn_export_pdf">Exporteer PDF</button>
                 </div>
             </div>
         </section>
@@ -82,55 +88,58 @@
         <section class="period-bar" id="periodBar">
             <div class="period-dates">
                 <div class="period-field">
-                    <label class="label-small">STARTDATUM</label>
+                    <label class="label-small" data-i18n="label_start_date">STARTDATUM</label>
                     <input type="date" id="dateStart" class="date-input">
                 </div>
                 <div class="period-field">
-                    <label class="label-small">EINDDATUM</label>
+                    <label class="label-small" data-i18n="label_end_date">EINDDATUM</label>
                     <input type="date" id="dateEnd" class="date-input">
                 </div>
             </div>
             <div class="period-progress" id="periodProgress">
                 <div class="progress-info">
-                    <span class="progress-label" id="progressLabel">Stel campagneperiode in</span>
+                    <span class="progress-label" id="progressLabel" data-i18n="progress_set_period">Stel campagneperiode in</span>
                     <span class="progress-pct" id="progressPct"></span>
                 </div>
                 <div class="progress-track">
                     <div class="progress-fill" id="progressFill" style="width: 0%"></div>
                     <div class="progress-today" id="progressToday" style="left: 0%"></div>
                 </div>
-                <p class="period-note" id="periodNote">Alle huidige KPI's zijn ratio-gebaseerd en worden direct vergeleken met het volledige target, ongeacht de looptijd.</p>
+                <p class="period-note" id="periodNote" data-i18n="default_period_note">Alle huidige KPI's zijn ratio-gebaseerd en worden direct vergeleken met het volledige target, ongeacht de looptijd.</p>
             </div>
         </section>
 
         <!-- Campaign context -->
         <section class="context-bar">
             <div class="context-field">
-                <label class="label-small">DOELGROEPGROOTTE</label>
-                <input type="text" id="ctxAudienceSize" class="context-input" placeholder="bijv. 45.000">
+                <label class="label-small" data-i18n="label_audience_size">DOELGROEPGROOTTE</label>
+                <input type="text" id="ctxAudienceSize" class="context-input" placeholder="bijv. 45.000" data-i18n-ph="placeholder_audience_size">
             </div>
             <div class="context-field">
-                <label class="label-small">MAANDBUDGET</label>
-                <input type="text" id="ctxBudget" class="context-input" placeholder="bijv. € 2.500">
+                <label class="label-small" data-i18n="label_monthly_budget">MAANDBUDGET</label>
+                <input type="text" id="ctxBudget" class="context-input" placeholder="bijv. € 2.500" data-i18n-ph="placeholder_monthly_budget">
             </div>
             <div class="context-field">
-                <label class="label-small">PLATFORM</label>
-                <input type="text" id="ctxPlatform" class="context-input" placeholder="bijv. LinkedIn Ads" value="LinkedIn Ads">
+                <label class="label-small" data-i18n="label_platform">PLATFORM</label>
+                <input type="text" id="ctxPlatform" class="context-input" placeholder="bijv. LinkedIn Ads" value="LinkedIn Ads" data-i18n-ph="placeholder_platform">
             </div>
             <div class="context-field context-field-wide">
-                <label class="label-small">NOTITIES</label>
-                <input type="text" id="ctxNotes" class="context-input" placeholder="bijv. Focus op decision makers, IT-sector, Nederland">
+                <label class="label-small" data-i18n="label_notes">NOTITIES</label>
+                <input type="text" id="ctxNotes" class="context-input" placeholder="bijv. Focus op decision makers, IT-sector, Nederland" data-i18n-ph="placeholder_notes">
             </div>
         </section>
 
         <!-- Audiences -->
         <section class="section-heading">
-            <h2 class="section-title">Doelgroepen</h2>
-            <p class="section-subtitle">De targeting die in deze campagne wordt gebruikt. Voeg per LinkedIn-doelgroep een kaart toe met de essentie — geen volledige must-also-match-structuur nodig.</p>
+            <h2 class="section-title" data-i18n="audiences_title">Doelgroepen</h2>
+            <p class="section-subtitle" data-i18n="audiences_subtitle">De targeting die in deze campagne wordt gebruikt. Voeg per LinkedIn-doelgroep een kaart toe met de essentie — geen volledige must-also-match-structuur nodig.</p>
         </section>
         <section class="audiences-section">
             <div class="audience-list" id="audienceList"></div>
-            <button class="btn-secondary audience-add-btn" id="btnAddAudience">+ Doelgroep toevoegen</button>
+            <div class="audience-actions">
+                <button class="btn-secondary audience-add-btn" id="btnAddAudience" data-i18n="btn_add_audience">+ Doelgroep toevoegen</button>
+                <button class="btn-secondary" id="btnDownloadAudiences" data-i18n="btn_download_audiences">Download doelgroepen als PNG</button>
+            </div>
         </section>
 
         <!-- Benchmark legend -->
@@ -140,65 +149,65 @@
                     <span class="benchmark-icon">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 12h3V6H2v6zm4.5 0h3V2h-3v10zM11 12h3V8h-3v4z" fill="currentColor"/></svg>
                     </span>
-                    LinkedIn Ads benchmarks per branche
+                    <span data-i18n="benchmark_toggle">LinkedIn Ads benchmarks per branche</span>
                 </span>
                 <span class="benchmark-arrow" id="benchmarkArrow">&#8250;</span>
             </button>
             <div class="benchmark-content" id="benchmarkContent">
                 <div class="benchmark-controls">
                     <div class="benchmark-select-wrap">
-                        <label class="label-small">SELECTEER BRANCHE</label>
+                        <label class="label-small" data-i18n="benchmark_select_branche">SELECTEER BRANCHE</label>
                         <select id="benchmarkBranch" class="select-campaign">
                             <option value="">— Kies een branche —</option>
                         </select>
                     </div>
-                    <button class="btn-primary" id="btnApplyBenchmark" disabled>Gebruik als target</button>
+                    <button class="btn-primary" id="btnApplyBenchmark" disabled data-i18n="benchmark_apply">Gebruik als target</button>
                 </div>
                 <div class="benchmark-table-wrap" id="benchmarkTableWrap">
                     <table class="benchmark-table" id="benchmarkTable">
                         <thead>
                             <tr>
-                                <th>KPI</th>
-                                <th>Laag</th>
-                                <th>Gemiddeld</th>
-                                <th>Goed</th>
-                                <th>Excellent</th>
+                                <th data-i18n="benchmark_col_kpi">KPI</th>
+                                <th data-i18n="benchmark_col_low">Laag</th>
+                                <th data-i18n="benchmark_col_avg">Gemiddeld</th>
+                                <th data-i18n="benchmark_col_good">Goed</th>
+                                <th data-i18n="benchmark_col_excellent">Excellent</th>
                             </tr>
                         </thead>
                         <tbody id="benchmarkBody"></tbody>
                     </table>
                 </div>
-                <p class="benchmark-disclaimer">Benchmarks zijn gebaseerd op algemene LinkedIn Ads marktdata. Werkelijke resultaten variëren per doelgroep, regio, budget en advertentietype.</p>
+                <p class="benchmark-disclaimer" data-i18n="benchmark_disclaimer">Benchmarks zijn gebaseerd op algemene LinkedIn Ads marktdata. Werkelijke resultaten variëren per doelgroep, regio, budget en advertentietype.</p>
             </div>
         </section>
 
         <!-- Summary card -->
         <section class="summary-card" id="summaryCard">
             <div class="summary-header">
-                <h2 class="summary-title">Samenvatting</h2>
-                <div class="summary-badge" id="summaryBadge">— Laden</div>
+                <h2 class="summary-title" data-i18n="summary_title">Samenvatting</h2>
+                <div class="summary-badge" id="summaryBadge" data-i18n="summary_loading">— Laden</div>
             </div>
-            <p class="summary-text" id="summaryText">Vul de KPI-waarden in om een samenvatting te genereren.</p>
+            <p class="summary-text" id="summaryText" data-i18n="summary_empty_placeholder">Vul de KPI-waarden in om een samenvatting te genereren.</p>
             <div class="summary-stats" id="summaryStats">
                 <div class="stat-item">
                     <span class="stat-value" id="statGreen">0</span>
-                    <span class="stat-label status-green-text">Op target</span>
+                    <span class="stat-label status-green-text" data-i18n="stat_on_target">Op target</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-value" id="statOrange">0</span>
-                    <span class="stat-label status-orange-text">Aandachtspunt</span>
+                    <span class="stat-label status-orange-text" data-i18n="stat_attention">Aandachtspunt</span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-value" id="statRed">0</span>
-                    <span class="stat-label status-red-text">Kritiek</span>
+                    <span class="stat-label status-red-text" data-i18n="stat_critical">Kritiek</span>
                 </div>
             </div>
         </section>
 
         <!-- Campaign KPIs heading -->
         <section class="section-heading">
-            <h2 class="section-title">Campaign KPI's</h2>
-            <p class="section-subtitle">Prestaties van de advertentiecampagne — gevuld door Agensea of via LinkedIn CSV-import.</p>
+            <h2 class="section-title" data-i18n="campaign_kpis_title">Campaign KPI's</h2>
+            <p class="section-subtitle" data-i18n="campaign_kpis_subtitle">Prestaties van de advertentiecampagne — gevuld door Agensea of via LinkedIn CSV-import.</p>
         </section>
 
         <!-- KPI table -->
@@ -206,13 +215,13 @@
             <table class="kpi-table" id="kpiTable">
                 <thead>
                     <tr>
-                        <th class="col-kpi">KPI</th>
-                        <th class="col-target">Target</th>
-                        <th class="col-actual">Werkelijk</th>
-                        <th class="col-status">Status</th>
-                        <th class="col-deviation">Afwijking</th>
-                        <th class="col-explanation">Toelichting</th>
-                        <th class="col-action">Actie / Advies</th>
+                        <th class="col-kpi" data-i18n="kpi_col_kpi">KPI</th>
+                        <th class="col-target" data-i18n="kpi_col_target">Target</th>
+                        <th class="col-actual" data-i18n="kpi_col_actual">Werkelijk</th>
+                        <th class="col-status" data-i18n="kpi_col_status">Status</th>
+                        <th class="col-deviation" data-i18n="kpi_col_deviation">Afwijking</th>
+                        <th class="col-explanation" data-i18n="kpi_col_explanation">Toelichting</th>
+                        <th class="col-action" data-i18n="kpi_col_action">Actie / Advies</th>
                     </tr>
                 </thead>
                 <tbody id="kpiBody"></tbody>
@@ -221,8 +230,8 @@
 
         <!-- Business KPIs heading -->
         <section class="section-heading">
-            <h2 class="section-title">Business KPI's</h2>
-            <p class="section-subtitle">Commerciële doelen van de klant — in te vullen door de klant zelf via de deel-link. Max. CAC en ROAS-target worden automatisch berekend.</p>
+            <h2 class="section-title" data-i18n="biz_title">Business KPI's</h2>
+            <p class="section-subtitle" data-i18n="biz_subtitle">Commerciële doelen van de klant — in te vullen door de klant zelf via de deel-link. Max. CAC en ROAS-target worden automatisch berekend.</p>
         </section>
 
         <!-- Business KPIs table -->
@@ -230,46 +239,46 @@
             <table class="kpi-table biz-table">
                 <thead>
                     <tr>
-                        <th class="col-kpi">Business KPI</th>
-                        <th class="col-target">Waarde</th>
-                        <th class="col-explanation">Uitleg</th>
+                        <th class="col-kpi" data-i18n="biz_col_kpi">Business KPI</th>
+                        <th class="col-target" data-i18n="biz_col_value">Waarde</th>
+                        <th class="col-explanation" data-i18n="biz_col_explanation">Uitleg</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><span class="kpi-name">Productwaarde</span><span class="kpi-unit">€ per sale/lead</span></td>
+                        <td><span class="kpi-name" data-i18n="biz_row_product_value">Productwaarde</span><span class="kpi-unit" data-i18n="biz_row_product_value_unit">€ per sale/lead</span></td>
                         <td><input type="text" id="bizProductValue" class="editable" placeholder="—"></td>
-                        <td><span class="explanation-text">Wat levert één nieuwe klant, sale of lead je gemiddeld op? Bijvoorbeeld: een cursus van € 500, of een contract van € 2.000 per jaar.</span></td>
+                        <td><span class="explanation-text" data-i18n-html="biz_row_product_value_exp"></span></td>
                     </tr>
                     <tr>
-                        <td><span class="kpi-name">Winstmarge</span><span class="kpi-unit">% (optioneel)</span></td>
+                        <td><span class="kpi-name" data-i18n="biz_row_margin">Winstmarge</span><span class="kpi-unit" data-i18n="biz_row_margin_unit">% (optioneel)</span></td>
                         <td><input type="text" id="bizMargin" class="editable" placeholder="—"></td>
-                        <td><span class="explanation-text">Jouw bruto winstmarge op de productwaarde — dus wat er per klant overblijft na inkoop/productkosten, vóór advertentiekosten. Voel je dit te gevoelig om te delen? Laat 'm gewoon leeg — dan tonen we de Max. CAC niet, en werken we alleen met de Geplande CAC en ROAS.</span></td>
+                        <td><span class="explanation-text" data-i18n-html="biz_row_margin_exp"></span></td>
                     </tr>
                     <tr>
-                        <td><span class="kpi-name">Doel</span><span class="kpi-unit">aantal</span></td>
+                        <td><span class="kpi-name" data-i18n="biz_row_goal">Doel</span><span class="kpi-unit" data-i18n="biz_row_goal_unit">aantal</span></td>
                         <td><input type="text" id="bizGoal" class="editable" placeholder="—"></td>
-                        <td><span class="explanation-text">Hoeveel nieuwe sales of leads wil je uit deze campagne halen? Dit is je zakelijke doelstelling — bijv. 25 nieuwe klanten.</span></td>
+                        <td><span class="explanation-text" data-i18n-html="biz_row_goal_exp"></span></td>
                     </tr>
                     <tr>
-                        <td><span class="kpi-name">Totaal campagnebudget</span><span class="kpi-unit">€</span></td>
+                        <td><span class="kpi-name" data-i18n="biz_row_budget">Totaal campagnebudget</span><span class="kpi-unit" data-i18n="biz_row_budget_unit">€</span></td>
                         <td><input type="text" id="bizBudget" class="editable" placeholder="—"></td>
-                        <td><span class="explanation-text">Het totale advertentiebudget voor de volledige looptijd van deze campagne. Bijv. 3 maanden × € 2.500 = € 7.500. Dit vormt de basis voor CAC en ROAS.</span></td>
+                        <td><span class="explanation-text" data-i18n-html="biz_row_budget_exp"></span></td>
                     </tr>
                     <tr>
-                        <td><span class="kpi-name">Geplande CAC</span><span class="kpi-unit">€ per klant</span></td>
+                        <td><span class="kpi-name" data-i18n="biz_row_planned_cac">Geplande CAC</span><span class="kpi-unit" data-i18n="biz_row_planned_cac_unit">€ per klant</span></td>
                         <td><span class="ro-value" id="bizPlannedCac">—</span></td>
-                        <td><span class="explanation-text"><strong>Customer Acquisition Cost</strong> — wat je op basis van dit plan per nieuwe klant uitgeeft. Berekend als Budget ÷ Doel. Dit is je <em>verwachte</em> kost per klant, niet per se het maximum.</span></td>
+                        <td><span class="explanation-text" data-i18n-html="biz_row_planned_cac_exp"></span></td>
                     </tr>
                     <tr>
-                        <td><span class="kpi-name">Max. CAC</span><span class="kpi-unit">€ per klant</span></td>
+                        <td><span class="kpi-name" data-i18n="biz_row_max_cac">Max. CAC</span><span class="kpi-unit" data-i18n="biz_row_max_cac_unit">€ per klant</span></td>
                         <td><span class="ro-value" id="bizMaxCac">—</span></td>
-                        <td><span class="explanation-text">Het <strong>absolute plafond</strong>: tot hier kun je per klant uitgeven voordat je verlies draait. Berekend als Productwaarde × Winstmarge. Ligt je Geplande CAC erboven → verlies. Eronder → winst. <em>Alleen zichtbaar als je winstmarge invult.</em></span></td>
+                        <td><span class="explanation-text" data-i18n-html="biz_row_max_cac_exp"></span></td>
                     </tr>
                     <tr>
-                        <td><span class="kpi-name">ROAS-target</span><span class="kpi-unit">×</span></td>
+                        <td><span class="kpi-name" data-i18n="biz_row_roas">ROAS-target</span><span class="kpi-unit" data-i18n="biz_row_roas_unit">×</span></td>
                         <td><span class="ro-value" id="bizRoas">—</span></td>
-                        <td><span class="explanation-text"><strong>Return on Ad Spend</strong> — hoeveel euro omzet je terugverdient per euro advertentiebudget. Een ROAS van 3× betekent: voor elke € 1 ad-kosten komt er € 3 omzet binnen.</span></td>
+                        <td><span class="explanation-text" data-i18n-html="biz_row_roas_exp"></span></td>
                     </tr>
                 </tbody>
             </table>
@@ -277,7 +286,7 @@
 
         <!-- Footer note -->
         <section class="footer-note">
-            <p>Gegenereerd door <strong>Agensea</strong> — Klik op Target of Werkelijk waarden om aan te passen.</p>
+            <p data-i18n-html="footer_note">Gegenereerd door <strong>Agensea</strong> — Klik op Target of Werkelijk waarden om aan te passen.</p>
         </section>
 
     </main>
@@ -287,47 +296,47 @@
          ═══════════════════════════════════════════ -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
-            <h3 class="modal-title" id="modalTitle">Nieuwe campagne toevoegen</h3>
+            <h3 class="modal-title" id="modalTitle" data-i18n="modal_add_title">Nieuwe campagne toevoegen</h3>
             <div class="modal-field">
-                <label class="label-small">KLANTNAAM</label>
-                <input type="text" id="newClientName" class="modal-input" placeholder="bijv. Contemplas">
+                <label class="label-small" data-i18n="modal_client">KLANTNAAM</label>
+                <input type="text" id="newClientName" class="modal-input" placeholder="bijv. Contemplas" data-i18n-ph="modal_client_ph">
             </div>
             <div class="modal-field">
-                <label class="label-small">CAMPAGNENAAM</label>
-                <input type="text" id="newCampaignName" class="modal-input" placeholder="bijv. LinkedIn Ads — Leadgeneratie Q2">
+                <label class="label-small" data-i18n="modal_campaign">CAMPAGNENAAM</label>
+                <input type="text" id="newCampaignName" class="modal-input" placeholder="bijv. LinkedIn Ads — Leadgeneratie Q2" data-i18n-ph="modal_campaign_ph">
             </div>
             <div class="modal-field">
-                <label class="label-small">CAMPAGNETYPE</label>
+                <label class="label-small" data-i18n="modal_type">CAMPAGNETYPE</label>
                 <select id="newCampaignType" class="modal-input modal-select">
-                    <option value="leadgen">Leadgeneratie — leads via formulieren of LP's</option>
-                    <option value="awareness">Awareness / Branding — bereik, engagement, volgers</option>
-                    <option value="traffic">Website Traffic — bezoekers naar website</option>
-                    <option value="video">Video Views — videoweergaven en engagement</option>
+                    <option value="leadgen" data-i18n="ctype_leadgen_option">Leadgeneratie — leads via formulieren of LP's</option>
+                    <option value="awareness" data-i18n="ctype_awareness_option">Awareness / Branding — bereik, engagement, volgers</option>
+                    <option value="traffic" data-i18n="ctype_traffic_option">Website Traffic — bezoekers naar website</option>
+                    <option value="video" data-i18n="ctype_video_option">Video Views — videoweergaven en engagement</option>
                 </select>
             </div>
             <div class="modal-date-row">
                 <div class="modal-date-field">
-                    <label class="label-small">STARTDATUM</label>
+                    <label class="label-small" data-i18n="modal_start">STARTDATUM</label>
                     <input type="date" id="newCampaignStart" class="modal-input">
                 </div>
                 <div class="modal-date-field">
-                    <label class="label-small">LOOPTIJD</label>
+                    <label class="label-small" data-i18n="modal_duration">LOOPTIJD</label>
                     <div class="duration-row">
-                        <input type="number" id="newCampaignDuration" class="modal-input duration-input" placeholder="—" min="1">
+                        <input type="number" id="newCampaignDuration" class="modal-input duration-input" placeholder="—" min="1" data-i18n-ph="modal_duration_ph">
                         <select id="newCampaignDurationUnit" class="modal-input duration-select">
-                            <option value="weeks">weken</option>
-                            <option value="months" selected>maanden</option>
+                            <option value="weeks" data-i18n="modal_weeks">weken</option>
+                            <option value="months" selected data-i18n="modal_months">maanden</option>
                         </select>
                     </div>
                 </div>
                 <div class="modal-date-field">
-                    <label class="label-small">OF EINDDATUM</label>
+                    <label class="label-small" data-i18n="modal_or_end">OF EINDDATUM</label>
                     <input type="date" id="newCampaignEnd" class="modal-input">
                 </div>
             </div>
             <div class="modal-actions">
-                <button class="btn-secondary" id="btnModalCancel">Annuleren</button>
-                <button class="btn-primary" id="btnModalConfirm">Toevoegen</button>
+                <button class="btn-secondary" id="btnModalCancel" data-i18n="btn_cancel">Annuleren</button>
+                <button class="btn-primary" id="btnModalConfirm" data-i18n="btn_add">Toevoegen</button>
             </div>
         </div>
     </div>
@@ -337,21 +346,22 @@
          ═══════════════════════════════════════════ -->
     <div class="modal-overlay" id="shareModalOverlay">
         <div class="modal">
-            <h3 class="modal-title">Delen met klant</h3>
-            <p class="modal-desc">Kopieer onderstaande link en stuur deze naar je klant. De klant ziet een schone, read-only versie van de rapportage.</p>
+            <h3 class="modal-title" data-i18n="share_title">Delen met klant</h3>
+            <p class="modal-desc" data-i18n="share_desc">Kopieer onderstaande link en stuur deze naar je klant. De klant ziet een schone, read-only versie van de rapportage.</p>
             <div class="share-link-wrap">
                 <input type="text" id="shareLink" class="modal-input share-link" readonly>
-                <button class="btn-primary" id="btnCopyLink">Kopieer</button>
+                <button class="btn-primary" id="btnCopyLink" data-i18n="btn_copy">Kopieer</button>
             </div>
             <p class="share-note" id="shareNote"></p>
             <div class="modal-actions">
-                <button class="btn-secondary" id="btnShareClose">Sluiten</button>
+                <button class="btn-secondary" id="btnShareClose" data-i18n="btn_close">Sluiten</button>
             </div>
         </div>
     </div>
 
     <div class="import-toast" id="importToast"></div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

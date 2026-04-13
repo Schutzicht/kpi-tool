@@ -101,19 +101,189 @@
     <header class="header">
         <div class="header-inner">
             <div class="logo">agensea<span class="logo-accent">.</span></div>
-            <div class="header-label">Campagne Rapportage</div>
+            <div class="header-right">
+                <div class="lang-switch">
+                    <button class="lang-btn" data-lang="nl">NL</button>
+                    <button class="lang-btn" data-lang="en">EN</button>
+                </div>
+                <div class="header-label" id="clientHeaderLabel">Campagne Rapportage</div>
+            </div>
         </div>
     </header>
 
     <main class="main" id="clientMain">
         <div class="client-error" id="clientError" style="display:none;">
-            <h2>Geen rapportage gevonden</h2>
-            <p>Deze link bevat geen geldige campagnedata. Neem contact op met je accountmanager.</p>
+            <h2 id="clientErrorTitle">Geen rapportage gevonden</h2>
+            <p id="clientErrorDesc">Deze link bevat geen geldige campagnedata. Neem contact op met je accountmanager.</p>
         </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script>
+        // ── Minimal i18n for client view ──
+        const I18N = {
+            nl: {
+                header_label: 'Campagne Rapportage',
+                error_title: 'Geen rapportage gevonden',
+                error_desc: 'Deze link bevat geen geldige campagnedata. Neem contact op met je accountmanager.',
+                audiences_title: 'Doelgroepen',
+                audiences_subtitle_ro: 'De targeting die in deze campagne wordt gebruikt.',
+                mam_section_label: 'MOET OOK VOLDOEN AAN',
+                mam_and_label: 'EN',
+                mam_and_connector: '+ EN',
+                audience_default_name: 'Doelgroep',
+                audience_field_location: 'LOCATIE',
+                audience_field_job_functions: 'FUNCTIES / TITELS',
+                audience_field_seniority: 'SENIORITEIT',
+                audience_field_company_size: 'BEDRIJFSGROOTTE',
+                audience_field_industry: 'BRANCHE',
+                audience_estimated_size: 'GESCHATTE GROOTTE',
+                audience_notes: 'UITSLUITINGEN / NOTITIES',
+                btn_download_audiences: 'Download doelgroepen als PNG',
+                biz_title: 'Business KPI\'s',
+                biz_subtitle_edit: 'Vul hieronder je commerciële doelen in. Max. CAC en ROAS-target worden automatisch berekend.',
+                biz_subtitle_ro: 'Commerciële doelen van de campagne. Max. CAC en ROAS-target worden automatisch berekend.',
+                biz_col_kpi: 'Business KPI',
+                biz_col_value: 'Waarde',
+                biz_col_explanation: 'Uitleg',
+                biz_row_product_value: 'Productwaarde',
+                biz_row_product_value_unit: '€ per sale/lead',
+                biz_row_product_value_exp: 'Wat levert één nieuwe klant, sale of lead je gemiddeld op? Bijvoorbeeld: een cursus van € 500, of een contract van € 2.000 per jaar.',
+                biz_row_margin: 'Winstmarge',
+                biz_row_margin_unit: '% (optioneel)',
+                biz_row_margin_exp: 'Jouw bruto winstmarge op de productwaarde — dus wat er per klant overblijft na inkoop/productkosten, vóór advertentiekosten. Vind je dit te gevoelig om te delen? Laat \'m gewoon leeg — dan tonen we de Max. CAC niet, en werken we alleen met de Geplande CAC en ROAS.',
+                biz_row_goal: 'Doel',
+                biz_row_goal_unit: 'aantal',
+                biz_row_goal_exp: 'Hoeveel nieuwe sales of leads wil je uit deze campagne halen? Dit is je zakelijke doelstelling — bijv. 25 nieuwe klanten.',
+                biz_row_budget: 'Totaal campagnebudget',
+                biz_row_budget_unit: '€',
+                biz_row_budget_exp: 'Het totale advertentiebudget voor de volledige looptijd van deze campagne. Bijv. 3 maanden × € 2.500 = € 7.500. Dit vormt de basis voor CAC en ROAS.',
+                biz_row_planned_cac: 'Geplande CAC',
+                biz_row_planned_cac_unit: '€ per klant',
+                biz_row_planned_cac_exp: '<strong>Customer Acquisition Cost</strong> — wat je op basis van dit plan per nieuwe klant uitgeeft. Berekend als Budget ÷ Doel.',
+                biz_row_max_cac: 'Max. CAC',
+                biz_row_max_cac_unit: '€ per klant',
+                biz_row_max_cac_exp: 'Het <strong>absolute plafond</strong>: tot hier kun je per klant uitgeven voordat je verlies draait. Berekend als Productwaarde × Winstmarge. <em>Alleen zichtbaar als je winstmarge invult.</em>',
+                biz_row_roas: 'ROAS-target',
+                biz_row_roas_unit: '×',
+                biz_row_roas_exp: '<strong>Return on Ad Spend</strong> — hoeveel euro omzet je terugverdient per euro advertentiebudget. Een ROAS van 3× betekent: voor elke € 1 ad-kosten komt er € 3 omzet binnen.',
+                save_saving: 'Opslaan…',
+                save_saved: 'Opgeslagen ✓',
+                save_failed: 'Opslaan mislukt',
+                summary_title: 'Samenvatting',
+                summary_no_data: 'Geen data',
+                summary_good_badge: 'Goed op koers',
+                summary_critical_badge: 'Actie vereist',
+                summary_warning_badge: 'Aandachtspunten',
+                summary_no_data_text: 'Er zijn nog geen werkelijke resultaten ingevuld.',
+                summary_good: (g, t) => `De campagne presteert sterk. ${g} van de ${t} KPI's zitten op of boven target.`,
+                summary_critical: (r) => `De campagne vraagt aandacht. ${r} KPI('s) scoren onder target.`,
+                summary_warning: (g, rest) => `De campagne presteert gemiddeld. ${g} KPI('s) op target, ${rest} vragen aandacht.`,
+                stat_on_target: 'Op target',
+                stat_attention: 'Aandachtspunt',
+                stat_critical: 'Kritiek',
+                status_on_target: 'Op target',
+                status_attention: 'Aandacht',
+                status_critical: 'Kritiek',
+                status_no_data: 'Geen data',
+                kpi_col_kpi: 'KPI',
+                kpi_col_target: 'Target',
+                kpi_col_actual: 'Werkelijk',
+                kpi_col_status: 'Status',
+                kpi_col_deviation: 'Afwijking',
+                campaign_kpis_title: 'Campaign KPI\'s',
+                campaign_kpis_subtitle: 'Prestaties van de advertentiecampagne.',
+                ctx_audience: 'Doelgroep',
+                ctx_budget: 'Budget',
+                ctx_platform: 'Platform',
+                footer_text: 'Rapportage opgesteld door <strong>Agensea</strong> — Voor vragen, neem contact op met je accountmanager.',
+            },
+            en: {
+                header_label: 'Campaign Report',
+                error_title: 'No report found',
+                error_desc: 'This link contains no valid campaign data. Please contact your account manager.',
+                audiences_title: 'Audiences',
+                audiences_subtitle_ro: 'The targeting used in this campaign.',
+                mam_section_label: 'MUST ALSO MATCH',
+                mam_and_label: 'AND',
+                mam_and_connector: '+ AND',
+                audience_default_name: 'Audience',
+                audience_field_location: 'LOCATION',
+                audience_field_job_functions: 'JOB FUNCTIONS / TITLES',
+                audience_field_seniority: 'SENIORITY',
+                audience_field_company_size: 'COMPANY SIZE',
+                audience_field_industry: 'INDUSTRY',
+                audience_estimated_size: 'ESTIMATED SIZE',
+                audience_notes: 'EXCLUSIONS / NOTES',
+                btn_download_audiences: 'Download audiences as PNG',
+                biz_title: 'Business KPIs',
+                biz_subtitle_edit: 'Fill in your commercial goals below. Max. CAC and ROAS target are calculated automatically.',
+                biz_subtitle_ro: 'The commercial goals of the campaign. Max. CAC and ROAS target are calculated automatically.',
+                biz_col_kpi: 'Business KPI',
+                biz_col_value: 'Value',
+                biz_col_explanation: 'Explanation',
+                biz_row_product_value: 'Product value',
+                biz_row_product_value_unit: '€ per sale/lead',
+                biz_row_product_value_exp: 'What does one new customer, sale or lead bring in on average? For example: a course at € 500, or a € 2,000 / year contract.',
+                biz_row_margin: 'Profit margin',
+                biz_row_margin_unit: '% (optional)',
+                biz_row_margin_exp: 'Your gross profit margin on the product value — what remains per customer after cost of goods, before advertising costs. Finds this too sensitive to share? Just leave it blank — we then skip Max. CAC and only show Planned CAC and ROAS.',
+                biz_row_goal: 'Goal',
+                biz_row_goal_unit: 'count',
+                biz_row_goal_exp: 'How many new sales or leads do you want from this campaign? This is your business objective — e.g. 25 new customers.',
+                biz_row_budget: 'Total campaign budget',
+                biz_row_budget_unit: '€',
+                biz_row_budget_exp: 'The total ad budget for the full duration of this campaign. E.g. 3 months × € 2,500 = € 7,500. This is the basis for CAC and ROAS.',
+                biz_row_planned_cac: 'Planned CAC',
+                biz_row_planned_cac_unit: '€ per customer',
+                biz_row_planned_cac_exp: '<strong>Customer Acquisition Cost</strong> — what you spend per new customer based on this plan. Calculated as Budget ÷ Goal.',
+                biz_row_max_cac: 'Max. CAC',
+                biz_row_max_cac_unit: '€ per customer',
+                biz_row_max_cac_exp: 'The <strong>absolute ceiling</strong>: above this you start losing money per customer. Calculated as Product value × Profit margin. <em>Only shown when profit margin is filled in.</em>',
+                biz_row_roas: 'ROAS target',
+                biz_row_roas_unit: '×',
+                biz_row_roas_exp: '<strong>Return on Ad Spend</strong> — how many euros of revenue you earn per euro of ad spend. A ROAS of 3× means: for every € 1 in ad costs, € 3 in revenue comes back.',
+                save_saving: 'Saving…',
+                save_saved: 'Saved ✓',
+                save_failed: 'Save failed',
+                summary_title: 'Summary',
+                summary_no_data: 'No data',
+                summary_good_badge: 'On track',
+                summary_critical_badge: 'Action required',
+                summary_warning_badge: 'Attention points',
+                summary_no_data_text: 'No actual results have been filled in yet.',
+                summary_good: (g, t) => `The campaign is performing strongly. ${g} out of ${t} KPIs are on or above target.`,
+                summary_critical: (r) => `The campaign needs attention. ${r} KPI(s) are below target.`,
+                summary_warning: (g, rest) => `The campaign is performing average. ${g} KPI(s) on target, ${rest} need attention.`,
+                stat_on_target: 'On target',
+                stat_attention: 'Attention',
+                stat_critical: 'Critical',
+                status_on_target: 'On target',
+                status_attention: 'Attention',
+                status_critical: 'Critical',
+                status_no_data: 'No data',
+                kpi_col_kpi: 'KPI',
+                kpi_col_target: 'Target',
+                kpi_col_actual: 'Actual',
+                kpi_col_status: 'Status',
+                kpi_col_deviation: 'Deviation',
+                campaign_kpis_title: 'Campaign KPIs',
+                campaign_kpis_subtitle: 'Performance of the ad campaign.',
+                ctx_audience: 'Audience',
+                ctx_budget: 'Budget',
+                ctx_platform: 'Platform',
+                footer_text: 'Report prepared by <strong>Agensea</strong> — For questions, please contact your account manager.',
+            },
+        };
+        let currentLang = localStorage.getItem('agensea_lang') || 'nl';
+        function t(key, ...args) {
+            const dict = I18N[currentLang] || I18N.nl;
+            const v = dict[key];
+            if (typeof v === 'function') return v(...args);
+            return v !== undefined ? v : (I18N.nl[key] || key);
+        }
+
         const SUPABASE_URL = 'https://lkyyggkzdptfvlgwjeur.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxreXlnZ2t6ZHB0ZnZsZ3dqZXVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MTk5MDAsImV4cCI6MjA5MTE5NTkwMH0.JSQtJRXVaoF5y6C1G8GPdI21cpqJ8_-wr1Def8tcs-Q';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
@@ -157,7 +327,60 @@
         }
 
         function getStatusLabel(cls) {
-            return { green: 'Op target', orange: 'Aandacht', red: 'Kritiek', neutral: 'Geen data' }[cls];
+            return { green: t('status_on_target'), orange: t('status_attention'), red: t('status_critical'), neutral: t('status_no_data') }[cls];
+        }
+
+        // English KPI overrides (NL is source; short names translated on the fly)
+        const KPI_EN = {
+            ctr:             { name: 'CTR',             unit: '%' },
+            cpc:             { name: 'CPC',             unit: '€' },
+            cpm:             { name: 'CPM',             unit: '€' },
+            conversieratio:  { name: 'Conversion rate', unit: '%' },
+            cpl:             { name: 'CPL',             unit: '€' },
+            video_view_rate: { name: 'Video view rate', unit: '%' },
+            engagement_rate: { name: 'Engagement rate', unit: '%' },
+            volgers:         { name: 'New followers',   unit: 'followers' },
+            cpv:             { name: 'CPV',             unit: '€' },
+            bounce_rate:     { name: 'Bounce rate',     unit: '%' },
+            time_on_page:    { name: 'Time on page',    unit: 'sec' },
+        };
+        function localizedKpi(def) {
+            if (currentLang === 'en' && KPI_EN[def.id]) {
+                return { ...def, name: KPI_EN[def.id].name, unit: KPI_EN[def.id].unit };
+            }
+            return def;
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        function chips(str) {
+            if (!str) return '';
+            return String(str).split(/[,;\n]/).map(s => s.trim()).filter(Boolean)
+                .map(v => `<span class="chip">${escapeHtml(v)}</span>`).join('');
+        }
+        // Render read-only must-also-match blocks: array of {attribute, values} OR legacy string
+        function renderMamBlocksRO(data) {
+            let blocks = [];
+            if (Array.isArray(data)) {
+                blocks = data.filter(b => (b.attribute && b.attribute.trim()) || (b.values && b.values.trim()));
+            } else if (typeof data === 'string' && data.trim()) {
+                blocks = String(data).split(/\n/).map(line => {
+                    const idx = line.indexOf(':');
+                    if (idx === -1) return line.trim() ? { attribute: '', values: line.trim() } : null;
+                    return { attribute: line.slice(0, idx).trim(), values: line.slice(idx + 1).trim() };
+                }).filter(Boolean);
+            }
+            if (blocks.length === 0) return '';
+            return blocks.map((b, i) => `
+                <div class="mam-block">
+                    <div class="mam-block-header">
+                        <span class="mam-connector">${i === 0 ? t('mam_and_label') : t('mam_and_connector')}</span>
+                        ${b.attribute ? `<span class="mam-label">${escapeHtml(b.attribute)}</span>` : ''}
+                    </div>
+                    <div class="chip-row">${chips(b.values)}</div>
+                </div>
+            `).join('');
         }
 
         function parseValue(str) {
@@ -193,10 +416,30 @@
         }
 
         // ── Parse & Render ──
+        let cachedRenderFn = null;
+
+        function setLang(lang) {
+            if (!I18N[lang]) return;
+            currentLang = lang;
+            localStorage.setItem('agensea_lang', lang);
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === currentLang);
+            });
+            document.getElementById('clientHeaderLabel').textContent = t('header_label');
+            if (cachedRenderFn) cachedRenderFn();
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
+            // Apply initial language state to header
+            document.getElementById('clientHeaderLabel').textContent = t('header_label');
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === currentLang);
+                btn.addEventListener('click', () => setLang(btn.dataset.lang));
+            });
+
             const hash = window.location.hash.slice(1);
             if (!hash) {
-                document.getElementById('clientError').style.display = '';
+                showError();
                 return;
             }
 
@@ -208,19 +451,19 @@
                 try {
                     data = JSON.parse(decodeURIComponent(escape(atob(hash.slice(5)))));
                 } catch (e) {
-                    document.getElementById('clientError').style.display = '';
+                    showError();
                     return;
                 }
             } else {
                 // Short token: fetch from Supabase
                 if (!sb) {
-                    document.getElementById('clientError').style.display = '';
+                    showError();
                     return;
                 }
                 try {
                     const { data: row, error } = await sb.from('campaigns').select('data').eq('share_token', hash).single();
                     if (error || !row) {
-                        document.getElementById('clientError').style.display = '';
+                        showError();
                         return;
                     }
                     // Map campaign data to client format
@@ -228,7 +471,23 @@
                     shareToken = hash;
                     fullCampaign = c;
                     editable = true;
-                    if (!c.businessKpis) c.businessKpis = { productValue: null, goal: null, budget: null };
+                    if (!c.businessKpis) c.businessKpis = { productValue: null, margin: null, goal: null, budget: null };
+                    // Migrate legacy mustAlsoMatch string → structured blocks
+                    if (Array.isArray(c.audiences)) {
+                        c.audiences.forEach(a => {
+                            if (!Array.isArray(a.mustAlsoMatchBlocks)) a.mustAlsoMatchBlocks = [];
+                            if (typeof a.mustAlsoMatch === 'string' && a.mustAlsoMatch.trim()) {
+                                a.mustAlsoMatch.split(/\n/).forEach(line => {
+                                    const idx = line.indexOf(':');
+                                    let attribute = '', values = '';
+                                    if (idx === -1) values = line.trim();
+                                    else { attribute = line.slice(0, idx).trim(); values = line.slice(idx + 1).trim(); }
+                                    if (attribute || values) a.mustAlsoMatchBlocks.push({ attribute, values });
+                                });
+                                delete a.mustAlsoMatch;
+                            }
+                        });
+                    }
                     data = {
                         n: c.name,
                         c: c.client,
@@ -240,13 +499,20 @@
                         kpis: c.kpis.map(k => ({ id: k.id, t: k.target, a: k.actual })),
                     };
                 } catch (e) {
-                    document.getElementById('clientError').style.display = '';
+                    showError();
                     return;
                 }
             }
 
             const main = document.getElementById('clientMain');
 
+            // Re-renderable render function
+            cachedRenderFn = () => renderReport(main, data, editable);
+            renderReport(main, data, editable);
+            document.title = `${data.n} — ${t('header_label')} — Agensea`;
+        });
+
+        function renderReport(main, data, editable) {
             // Hero
             let periodText = '';
             if (data.sd && data.ed) {
@@ -256,9 +522,9 @@
             let contextHtml = '';
             if (data.ctx) {
                 const items = [];
-                if (data.ctx.audienceSize) items.push({ label: 'Doelgroep', value: data.ctx.audienceSize });
-                if (data.ctx.budget) items.push({ label: 'Budget', value: data.ctx.budget });
-                if (data.ctx.platform) items.push({ label: 'Platform', value: data.ctx.platform });
+                if (data.ctx.audienceSize) items.push({ label: t('ctx_audience'), value: data.ctx.audienceSize });
+                if (data.ctx.budget) items.push({ label: t('ctx_budget'), value: data.ctx.budget });
+                if (data.ctx.platform) items.push({ label: t('ctx_platform'), value: data.ctx.platform });
                 if (items.length > 0) {
                     contextHtml = `<div class="client-context">${items.map(i =>
                         `<div class="client-ctx-item"><span class="client-ctx-label">${i.label}</span><span class="client-ctx-value">${i.value}</span></div>`
@@ -283,29 +549,29 @@
             let badgeCls = '', badgeText = '', summaryText = '';
             const score = total > 0 ? greens / total : 0;
             if (total === 0) {
-                badgeText = 'Geen data';
-                summaryText = 'Er zijn nog geen werkelijke resultaten ingevuld.';
+                badgeText = t('summary_no_data');
+                summaryText = t('summary_no_data_text');
             } else if (score >= 0.8 && reds === 0) {
                 badgeCls = 'good';
-                badgeText = 'Goed op koers';
-                summaryText = `De campagne presteert sterk. ${greens} van de ${total} KPI's zitten op of boven target.`;
+                badgeText = t('summary_good_badge');
+                summaryText = t('summary_good', greens, total);
             } else if (reds >= 2 || score < 0.4) {
                 badgeCls = 'critical';
-                badgeText = 'Actie vereist';
-                summaryText = `De campagne vraagt aandacht. ${reds} KPI('s) scoren onder target.`;
+                badgeText = t('summary_critical_badge');
+                summaryText = t('summary_critical', reds);
             } else {
                 badgeCls = 'warning';
-                badgeText = 'Aandachtspunten';
-                summaryText = `De campagne presteert gemiddeld. ${greens} KPI('s) op target, ${oranges + reds} vragen aandacht.`;
+                badgeText = t('summary_warning_badge');
+                summaryText = t('summary_warning', greens, oranges + reds);
             }
 
             // Build table rows
             let tableRows = '';
             data.kpis.forEach(k => {
-                const def = ALL_KPIS[k.id];
-                if (!def) return;
-
-                const dev = calculateDeviation(k.a, k.t, def.direction);
+                const base = ALL_KPIS[k.id];
+                if (!base) return;
+                const def = localizedKpi(base);
+                const dev = calculateDeviation(k.a, k.t, base.direction);
                 const cls = getStatusClass(dev);
                 const label = getStatusLabel(cls);
 
@@ -322,76 +588,45 @@
                 tableRows += `
                     <tr>
                         <td><span class="kpi-name">${def.name}</span><span class="kpi-unit">${def.unit}</span></td>
-                        <td><span class="ro-value">${formatValue(k.t, def.format)}</span></td>
-                        <td><span class="ro-value">${k.a !== null ? formatValue(k.a, def.format) : '—'}</span></td>
+                        <td><span class="ro-value">${formatValue(k.t, base.format)}</span></td>
+                        <td><span class="ro-value">${k.a !== null ? formatValue(k.a, base.format) : '—'}</span></td>
                         <td><span class="status-pill ${cls}"><span class="status-dot"></span>${label}</span></td>
                         <td><span class="deviation ${devCls}">${devFormatted}</span></td>
                     </tr>
                 `;
             });
 
-            // Audiences block (read-only)
-            function escapeHtml(str) {
-                return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-            }
-            function chips(str) {
-                if (!str) return '';
-                return String(str).split(/[,;\n]/).map(s => s.trim()).filter(Boolean)
-                    .map(t => `<span class="chip">${escapeHtml(t)}</span>`).join('');
-            }
-            function parseMam(str) {
-                if (!str) return [];
-                return String(str).split(/\n/).map(line => {
-                    const idx = line.indexOf(':');
-                    if (idx === -1) {
-                        const trimmed = line.trim();
-                        if (!trimmed) return null;
-                        return { label: '', values: trimmed.split(/[,;]/).map(s => s.trim()).filter(Boolean) };
-                    }
-                    const label = line.slice(0, idx).trim();
-                    const values = line.slice(idx + 1).split(/[,;]/).map(s => s.trim()).filter(Boolean);
-                    if (!label && values.length === 0) return null;
-                    return { label, values };
-                }).filter(Boolean);
-            }
-            function mamBlocks(str) {
-                const blocks = parseMam(str);
-                if (blocks.length === 0) return '';
-                return blocks.map(b => `
-                    <div class="mam-block">
-                        ${b.label ? `<span class="mam-label">${escapeHtml(b.label)}</span>` : ''}
-                        <div class="chip-row">${b.values.map(v => `<span class="chip">${escapeHtml(v)}</span>`).join('')}</div>
-                    </div>
-                `).join('');
-            }
+            // Audiences
             const audList = Array.isArray(data.aud) ? data.aud : [];
             let audiencesBlock = '';
             if (audList.length > 0) {
                 const audFieldDefs = [
-                    { key: 'location',     label: 'Locatie' },
-                    { key: 'jobFunctions', label: 'Functies / titels' },
-                    { key: 'seniority',    label: 'Senioriteit' },
-                    { key: 'companySize',  label: 'Bedrijfsgrootte' },
-                    { key: 'industry',     label: 'Branche' },
+                    { key: 'location',     labelKey: 'audience_field_location' },
+                    { key: 'jobFunctions', labelKey: 'audience_field_job_functions' },
+                    { key: 'seniority',    labelKey: 'audience_field_seniority' },
+                    { key: 'companySize',  labelKey: 'audience_field_company_size' },
+                    { key: 'industry',     labelKey: 'audience_field_industry' },
                 ];
                 const cardsHtml = audList.map(a => {
                     const fieldsHtml = audFieldDefs.map(f => {
                         const val = a[f.key] || '';
                         if (!val) return '';
-                        return `<div class="audience-field"><label class="label-small">${f.label.toUpperCase()}</label><div class="chip-row">${chips(val)}</div></div>`;
+                        return `<div class="audience-field"><label class="label-small">${t(f.labelKey)}</label><div class="chip-row">${chips(val)}</div></div>`;
                     }).filter(Boolean).join('');
                     const footerParts = [];
-                    if (a.estimatedSize) footerParts.push(`<div class="audience-field audience-field-small"><label class="label-small">GESCHATTE GROOTTE</label><div class="audience-plain">${escapeHtml(a.estimatedSize)}</div></div>`);
-                    if (a.notes) footerParts.push(`<div class="audience-field audience-field-wide"><label class="label-small">UITSLUITINGEN / NOTITIES</label><div class="audience-plain">${escapeHtml(a.notes)}</div></div>`);
-                    const mamHtml = a.mustAlsoMatch ? `
+                    if (a.estimatedSize) footerParts.push(`<div class="audience-field audience-field-small"><label class="label-small">${t('audience_estimated_size')}</label><div class="audience-plain">${escapeHtml(a.estimatedSize)}</div></div>`);
+                    if (a.notes) footerParts.push(`<div class="audience-field audience-field-wide"><label class="label-small">${t('audience_notes')}</label><div class="audience-plain">${escapeHtml(a.notes)}</div></div>`);
+                    const mamData = a.mustAlsoMatchBlocks && a.mustAlsoMatchBlocks.length ? a.mustAlsoMatchBlocks : a.mustAlsoMatch;
+                    const mamRendered = renderMamBlocksRO(mamData);
+                    const mamHtml = mamRendered ? `
                         <div class="audience-mam">
-                            <label class="label-small">MOET OOK VOLDOEN AAN</label>
-                            <div class="mam-preview">${mamBlocks(a.mustAlsoMatch)}</div>
+                            <label class="label-small">${t('mam_section_label')}</label>
+                            <div class="mam-preview">${mamRendered}</div>
                         </div>
                     ` : '';
                     return `
                         <div class="audience-card audience-card-ro">
-                            <div class="audience-card-header"><h3 class="audience-name-ro">${escapeHtml(a.name || 'Doelgroep')}</h3></div>
+                            <div class="audience-card-header"><h3 class="audience-name-ro">${escapeHtml(a.name || t('audience_default_name'))}</h3></div>
                             <div class="audience-grid">${fieldsHtml}</div>
                             ${mamHtml}
                             ${footerParts.length ? `<div class="audience-footer">${footerParts.join('')}</div>` : ''}
@@ -400,69 +635,70 @@
                 }).join('');
                 audiencesBlock = `
                     <section class="section-heading">
-                        <h2 class="section-title">Doelgroepen</h2>
-                        <p class="section-subtitle">De targeting die in deze campagne wordt gebruikt.</p>
+                        <h2 class="section-title">${t('audiences_title')}</h2>
+                        <p class="section-subtitle">${t('audiences_subtitle_ro')}</p>
                     </section>
                     <section class="audiences-section">
-                        <div class="audience-list">${cardsHtml}</div>
+                        <div class="audience-list" id="cliAudienceList">${cardsHtml}</div>
+                        <div class="audience-actions"><button class="btn-secondary" id="cliDownloadAudiences">${t('btn_download_audiences')}</button></div>
                     </section>
                 `;
             }
 
-            // Business KPIs block — matches Campaign KPIs table styling
+            // Business KPIs block
             const bk = data.bk || { productValue: null, margin: null, goal: null, budget: null };
             if (bk.margin === undefined) bk.margin = null;
             const bizValue = (v, fmt) => v !== null && v !== undefined ? formatValue(v, fmt) : '';
             const editAttr = editable ? '' : 'readonly';
             const bizBlock = `
                 <section class="section-heading">
-                    <h2 class="section-title">Business KPI's</h2>
-                    <p class="section-subtitle">${editable ? 'Vul hieronder je commerciële doelen in. Max. CAC en ROAS-target worden automatisch berekend.' : 'Commerciële doelen van de campagne. Max. CAC en ROAS-target worden automatisch berekend.'}</p>
+                    <h2 class="section-title">${t('biz_title')}</h2>
+                    <p class="section-subtitle">${editable ? t('biz_subtitle_edit') : t('biz_subtitle_ro')}</p>
                 </section>
                 <section class="table-wrapper">
                     <table class="kpi-table biz-table">
                         <thead>
                             <tr>
-                                <th style="width:22%">Business KPI</th>
-                                <th style="width:22%">Waarde</th>
-                                <th>Uitleg</th>
+                                <th style="width:22%">${t('biz_col_kpi')}</th>
+                                <th style="width:22%">${t('biz_col_value')}</th>
+                                <th>${t('biz_col_explanation')}</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td><span class="kpi-name">Productwaarde</span><span class="kpi-unit">€ per sale/lead</span></td>
+                                <td><span class="kpi-name">${t('biz_row_product_value')}</span><span class="kpi-unit">${t('biz_row_product_value_unit')}</span></td>
                                 <td><input type="text" id="cliBizProductValue" class="editable" placeholder="—" value="${bizValue(bk.productValue, 'currency')}" ${editAttr}></td>
-                                <td><span class="explanation-text">Wat levert één nieuwe klant, sale of lead je gemiddeld op? Bijvoorbeeld: een cursus van € 500, of een contract van € 2.000 per jaar.</span></td>
+                                <td><span class="explanation-text">${t('biz_row_product_value_exp')}</span></td>
                             </tr>
                             <tr>
-                                <td><span class="kpi-name">Winstmarge</span><span class="kpi-unit">% (optioneel)</span></td>
+                                <td><span class="kpi-name">${t('biz_row_margin')}</span><span class="kpi-unit">${t('biz_row_margin_unit')}</span></td>
                                 <td><input type="text" id="cliBizMargin" class="editable" placeholder="—" value="${bizValue(bk.margin, 'percentage')}" ${editAttr}></td>
-                                <td><span class="explanation-text">Jouw bruto winstmarge op de productwaarde — dus wat er per klant overblijft na inkoop/productkosten, vóór advertentiekosten. Vind je dit te gevoelig om te delen? Laat 'm gewoon leeg — dan tonen we de Max. CAC niet, en werken we alleen met de Geplande CAC en ROAS.</span></td>
+                                <td><span class="explanation-text">${t('biz_row_margin_exp')}</span></td>
                             </tr>
                             <tr>
-                                <td><span class="kpi-name">Doel</span><span class="kpi-unit">aantal</span></td>
+                                <td><span class="kpi-name">${t('biz_row_goal')}</span><span class="kpi-unit">${t('biz_row_goal_unit')}</span></td>
                                 <td><input type="text" id="cliBizGoal" class="editable" placeholder="—" value="${bizValue(bk.goal, 'number')}" ${editAttr}></td>
-                                <td><span class="explanation-text">Hoeveel nieuwe sales of leads wil je uit deze campagne halen? Dit is je zakelijke doelstelling — bijv. 25 nieuwe klanten.</span></td>
+                                <td><span class="explanation-text">${t('biz_row_goal_exp')}</span></td>
                             </tr>
                             <tr>
-                                <td><span class="kpi-name">Totaal campagnebudget</span><span class="kpi-unit">€</span></td>
+                                <td><span class="kpi-name">${t('biz_row_budget')}</span><span class="kpi-unit">${t('biz_row_budget_unit')}</span></td>
                                 <td><input type="text" id="cliBizBudget" class="editable" placeholder="—" value="${bizValue(bk.budget, 'currency')}" ${editAttr}></td>
-                                <td><span class="explanation-text">Het totale advertentiebudget voor de volledige looptijd van deze campagne. Bijv. 3 maanden × € 2.500 = € 7.500. Dit vormt de basis voor CAC en ROAS.</span></td>
+                                <td><span class="explanation-text">${t('biz_row_budget_exp')}</span></td>
                             </tr>
                             <tr>
-                                <td><span class="kpi-name">Geplande CAC</span><span class="kpi-unit">€ per klant</span></td>
+                                <td><span class="kpi-name">${t('biz_row_planned_cac')}</span><span class="kpi-unit">${t('biz_row_planned_cac_unit')}</span></td>
                                 <td><span class="ro-value" id="cliBizPlannedCac">—</span></td>
-                                <td><span class="explanation-text"><strong>Customer Acquisition Cost</strong> — wat je op basis van dit plan per nieuwe klant uitgeeft. Berekend als Budget ÷ Doel. Dit is je <em>verwachte</em> kost per klant.</span></td>
+                                <td><span class="explanation-text">${t('biz_row_planned_cac_exp')}</span></td>
                             </tr>
                             <tr>
-                                <td><span class="kpi-name">Max. CAC</span><span class="kpi-unit">€ per klant</span></td>
+                                <td><span class="kpi-name">${t('biz_row_max_cac')}</span><span class="kpi-unit">${t('biz_row_max_cac_unit')}</span></td>
                                 <td><span class="ro-value" id="cliBizMaxCac">—</span></td>
-                                <td><span class="explanation-text">Het <strong>absolute plafond</strong>: tot hier kun je per klant uitgeven voordat je verlies draait. Berekend als Productwaarde × Winstmarge. Ligt je Geplande CAC erboven → verlies. Eronder → winst. <em>Alleen zichtbaar als je winstmarge invult.</em></span></td>
+                                <td><span class="explanation-text">${t('biz_row_max_cac_exp')}</span></td>
                             </tr>
                             <tr>
-                                <td><span class="kpi-name">ROAS-target</span><span class="kpi-unit">×</span></td>
+                                <td><span class="kpi-name">${t('biz_row_roas')}</span><span class="kpi-unit">${t('biz_row_roas_unit')}</span></td>
                                 <td><span class="ro-value" id="cliBizRoas">—</span></td>
-                                <td><span class="explanation-text"><strong>Return on Ad Spend</strong> — hoeveel euro omzet je terugverdient per euro advertentiebudget. Een ROAS van 3× betekent: voor elke € 1 ad-kosten komt er € 3 omzet binnen.</span></td>
+                                <td><span class="explanation-text">${t('biz_row_roas_exp')}</span></td>
                             </tr>
                         </tbody>
                     </table>
@@ -485,40 +721,40 @@
 
                 <section class="summary-card">
                     <div class="summary-header">
-                        <h2 class="summary-title">Samenvatting</h2>
+                        <h2 class="summary-title">${t('summary_title')}</h2>
                         <div class="summary-badge ${badgeCls}">${badgeText}</div>
                     </div>
                     <p class="summary-text">${summaryText}</p>
                     <div class="summary-stats">
                         <div class="stat-item">
                             <span class="stat-value">${greens}</span>
-                            <span class="stat-label status-green-text">Op target</span>
+                            <span class="stat-label status-green-text">${t('stat_on_target')}</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-value">${oranges}</span>
-                            <span class="stat-label status-orange-text">Aandachtspunt</span>
+                            <span class="stat-label status-orange-text">${t('stat_attention')}</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-value">${reds}</span>
-                            <span class="stat-label status-red-text">Kritiek</span>
+                            <span class="stat-label status-red-text">${t('stat_critical')}</span>
                         </div>
                     </div>
                 </section>
 
                 <section class="section-heading">
-                    <h2 class="section-title">Campaign KPI's</h2>
-                    <p class="section-subtitle">Prestaties van de advertentiecampagne.</p>
+                    <h2 class="section-title">${t('campaign_kpis_title')}</h2>
+                    <p class="section-subtitle">${t('campaign_kpis_subtitle')}</p>
                 </section>
 
                 <section class="table-wrapper">
                     <table class="kpi-table">
                         <thead>
                             <tr>
-                                <th style="width:15%">KPI</th>
-                                <th style="width:15%">Target</th>
-                                <th style="width:15%">Werkelijk</th>
-                                <th style="width:15%">Status</th>
-                                <th style="width:15%">Afwijking</th>
+                                <th style="width:15%">${t('kpi_col_kpi')}</th>
+                                <th style="width:15%">${t('kpi_col_target')}</th>
+                                <th style="width:15%">${t('kpi_col_actual')}</th>
+                                <th style="width:15%">${t('kpi_col_status')}</th>
+                                <th style="width:15%">${t('kpi_col_deviation')}</th>
                             </tr>
                         </thead>
                         <tbody>${tableRows}</tbody>
@@ -526,14 +762,34 @@
                 </section>
 
                 <div class="client-footer">
-                    <p>Rapportage opgesteld door <strong>Agensea</strong> — Voor vragen, neem contact op met je accountmanager.</p>
+                    <p>${t('footer_text')}</p>
                 </div>
             `;
 
-            // Update page title
-            document.title = `${data.n} — Rapportage — Agensea`;
+            // Download audiences as PNG
+            const dlBtn = document.getElementById('cliDownloadAudiences');
+            if (dlBtn) {
+                dlBtn.addEventListener('click', async () => {
+                    if (typeof html2canvas === 'undefined') return;
+                    const el = document.getElementById('cliAudienceList');
+                    if (!el) return;
+                    try {
+                        const canvas = await html2canvas(el, {
+                            backgroundColor: getComputedStyle(document.body).backgroundColor || '#ffffff',
+                            scale: 2,
+                            useCORS: true,
+                            logging: false,
+                        });
+                        const link = document.createElement('a');
+                        const safe = (data.n || 'audiences').replace(/[^a-z0-9-_ ]/gi, '').trim() || 'audiences';
+                        link.download = `audiences-${safe}.png`;
+                        link.href = canvas.toDataURL('image/png');
+                        link.click();
+                    } catch (e) { console.warn('PNG export failed:', e); }
+                });
+            }
 
-            // ── Business KPI interactivity ──
+            // ── Business KPI interactivity (inside renderReport) ──
             function updateBizDerived() {
                 const plannedEl = document.getElementById('cliBizPlannedCac');
                 const maxEl = document.getElementById('cliBizMaxCac');
@@ -590,17 +846,24 @@
                         fullCampaign.businessKpis = bk;
                         e.target.value = parsed !== null ? formatValue(parsed, f.format) : '';
                         updateBizDerived();
-                        statusEl.textContent = 'Opslaan…';
+                        statusEl.textContent = t('save_saving');
                         statusEl.className = 'biz-save-status saving';
                         const ok = await saveBusinessKpis();
-                        statusEl.textContent = ok ? 'Opgeslagen ✓' : 'Opslaan mislukt';
+                        statusEl.textContent = ok ? t('save_saved') : t('save_failed');
                         statusEl.className = 'biz-save-status ' + (ok ? 'saved' : 'error');
                         setTimeout(() => { statusEl.textContent = ''; statusEl.className = 'biz-save-status'; }, 2500);
                     });
                     el.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
                 });
             }
-        });
+        }
+
+        // Error state translation helper
+        function showError() {
+            document.getElementById('clientError').style.display = '';
+            document.getElementById('clientErrorTitle').textContent = t('error_title');
+            document.getElementById('clientErrorDesc').textContent = t('error_desc');
+        }
     </script>
 </body>
 </html>

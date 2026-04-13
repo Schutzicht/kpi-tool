@@ -1593,49 +1593,172 @@ body {
 .audience-mam {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     padding-top: 12px;
     border-top: 1px dashed var(--border, rgba(0,0,0,0.08));
 }
-.audience-textarea {
-    background: transparent;
-    border: 1px solid var(--border, rgba(0,0,0,0.1));
+.mam-blocks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.mam-blocks-list:empty { display: none; }
+
+.mam-block-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    background: rgba(45, 63, 224, 0.04);
+    border: 1px solid rgba(45, 63, 224, 0.12);
     border-radius: 8px;
-    padding: 8px 10px;
+    position: relative;
+}
+.mam-block-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.mam-connector {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--indigo, #2d3fe0);
+    background: rgba(45, 63, 224, 0.12);
+    padding: 3px 8px;
+    border-radius: 100px;
+    white-space: nowrap;
+}
+.mam-attr-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border, rgba(0,0,0,0.12));
+    padding: 4px 0;
+    font-family: var(--font-body, inherit);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: inherit;
+    outline: none;
+}
+.mam-attr-input:focus {
+    border-bottom-color: var(--indigo, #2d3fe0);
+}
+.mam-values-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed var(--border, rgba(0,0,0,0.12));
+    padding: 4px 0;
     font-family: var(--font-body, inherit);
     font-size: 0.78rem;
     color: inherit;
     outline: none;
-    resize: vertical;
-    transition: border-color 0.15s;
-    line-height: 1.4;
 }
-.audience-textarea:focus {
-    border-color: var(--indigo, #2d3fe0);
+.mam-values-input:focus {
+    border-bottom-color: var(--indigo, #2d3fe0);
 }
-.audience-textarea::placeholder {
+.mam-values-input::placeholder, .mam-attr-input::placeholder {
     color: var(--muted);
     font-style: italic;
+    font-size: 0.72rem;
 }
+.mam-delete-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 6px;
+    transition: all 0.15s;
+}
+.mam-delete-btn:hover {
+    background: rgba(255, 80, 80, 0.1);
+    color: #d04040;
+}
+.mam-add-btn {
+    background: transparent;
+    border: 1px dashed var(--border, rgba(0,0,0,0.2));
+    color: var(--muted);
+    font-family: var(--font-body, inherit);
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    align-self: flex-start;
+}
+.mam-add-btn:hover {
+    border-color: var(--indigo, #2d3fe0);
+    color: var(--indigo, #2d3fe0);
+    background: rgba(45, 63, 224, 0.04);
+}
+
+/* read-only must-also-match blocks in client view */
 .mam-preview {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
-.mam-preview:empty {
-    display: none;
-}
+.mam-preview:empty { display: none; }
 .mam-block {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    padding: 8px 12px;
+    background: rgba(45, 63, 224, 0.04);
+    border: 1px solid rgba(45, 63, 224, 0.12);
+    border-radius: 8px;
 }
 .mam-label {
     font-size: 0.62rem;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
+    color: var(--indigo, #2d3fe0);
+}
+
+/* Language switch */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.lang-switch {
+    display: inline-flex;
+    border: 1px solid var(--border, rgba(0,0,0,0.12));
+    border-radius: 100px;
+    padding: 2px;
+    background: rgba(0,0,0,0.02);
+}
+.lang-btn {
+    background: transparent;
+    border: none;
     color: var(--muted);
+    font-family: var(--font-body, inherit);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 5px 12px;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.lang-btn.active {
+    background: var(--indigo, #2d3fe0);
+    color: #fff;
+}
+.lang-btn:not(.active):hover {
+    color: var(--indigo, #2d3fe0);
+}
+
+.audience-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
 }
 .audience-empty {
     font-size: 0.82rem;

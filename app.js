@@ -2,6 +2,495 @@
    AGENSEA KPI TRACKER — APPLICATION LOGIC
    ============================================ */
 
+// ── i18n ──────────────────────────────────────
+
+const I18N = {
+    nl: {
+        // Nav / top-level
+        nav_dashboard: 'Dashboard',
+        nav_campaign: 'Campagne',
+        app_label: 'KPI Tracker',
+
+        // Dashboard
+        dashboard_title: 'Dashboard',
+        dashboard_subtitle: 'Overzicht van alle campagnes per klant',
+        btn_new_campaign: '+ Nieuwe campagne',
+        dashboard_empty: 'Nog geen campagnes. Voeg je eerste campagne toe om te beginnen.',
+        without_client: 'Zonder klant',
+        campaigns_one: 'campagne',
+        campaigns_many: 'campagnes',
+        card_no_data: 'Nog geen data',
+        period_ended: 'Afgelopen',
+        period_starts_in: (d) => `Start over ${d}d`,
+        period_day_of: (e, t) => `Dag ${e}/${t}`,
+
+        // Detail top
+        btn_back_dashboard: '← Dashboard',
+        btn_upload_csv: 'LinkedIn CSV',
+        btn_share_client: 'Deel met klant',
+        btn_delete_campaign: 'Verwijderen',
+        btn_export_pdf: 'Exporteer PDF',
+        btn_download_png: 'Download als PNG',
+        client_label: 'Klantnaam',
+        campaign_label: 'Campagnenaam',
+
+        // Period
+        label_start_date: 'STARTDATUM',
+        label_end_date: 'EINDDATUM',
+        progress_set_period: 'Stel campagneperiode in',
+        progress_set_dates: 'Stel start- en einddatum in',
+        progress_period_note_empty: 'Zonder periode worden alle targets op eindwaarde vergeleken.',
+        progress_ended: (d) => `Campagne afgelopen — ${d} dagen gelopen`,
+        progress_ended_note: 'Campagne is afgerond. Alle targets worden op eindwaarde vergeleken.',
+        progress_starts_in: (d) => `Campagne start over ${d} dagen`,
+        progress_not_started: 'Campagne is nog niet gestart.',
+        progress_day_of: (e, t, r) => `Dag ${e} van ${t} — nog ${r} dagen`,
+        progress_active_note: 'Alle KPI\'s zijn ratio-gebaseerd en worden direct vergeleken met het volledige target.',
+        default_period_note: 'Alle huidige KPI\'s zijn ratio-gebaseerd en worden direct vergeleken met het volledige target, ongeacht de looptijd.',
+
+        // Context
+        label_audience_size: 'DOELGROEPGROOTTE',
+        label_monthly_budget: 'MAANDBUDGET',
+        label_platform: 'PLATFORM',
+        label_notes: 'NOTITIES',
+        placeholder_audience_size: 'bijv. 45.000',
+        placeholder_monthly_budget: 'bijv. € 2.500',
+        placeholder_platform: 'bijv. LinkedIn Ads',
+        placeholder_notes: 'bijv. Focus op decision makers, IT-sector, Nederland',
+
+        // Audiences
+        audiences_title: 'Doelgroepen',
+        audiences_subtitle: 'De targeting die in deze campagne wordt gebruikt. Voeg per LinkedIn-doelgroep een kaart toe met de essentie — geen volledige must-also-match-structuur nodig.',
+        audiences_subtitle_ro: 'De targeting die in deze campagne wordt gebruikt.',
+        btn_add_audience: '+ Doelgroep toevoegen',
+        audience_empty: 'Nog geen doelgroepen. Klik op "+ Doelgroep toevoegen".',
+        audience_name_placeholder: 'Doelgroepnaam — bijv. Decision Makers NL',
+        audience_delete_title: 'Verwijder doelgroep',
+        audience_delete_confirm: 'Doelgroep verwijderen?',
+        audience_default_name: 'Doelgroep',
+        audience_field_location: 'LOCATIE',
+        audience_field_job_functions: 'FUNCTIES / TITELS',
+        audience_field_seniority: 'SENIORITEIT',
+        audience_field_company_size: 'BEDRIJFSGROOTTE',
+        audience_field_industry: 'BRANCHE',
+        audience_field_location_ph: 'bijv. Nederland, België',
+        audience_field_job_functions_ph: 'bijv. Marketing, Sales, CEO',
+        audience_field_seniority_ph: 'bijv. Director, VP, CXO',
+        audience_field_company_size_ph: 'bijv. 51-200, 201-500',
+        audience_field_industry_ph: 'bijv. IT, SaaS, Financiën',
+        audience_estimated_size: 'GESCHATTE GROOTTE',
+        audience_estimated_size_placeholder: 'bijv. 45.000',
+        audience_notes: 'UITSLUITINGEN / NOTITIES',
+        audience_notes_placeholder: 'bijv. exclusie van concurrenten, blacklist',
+        btn_download_audiences: 'Download doelgroepen als PNG',
+
+        // Must also match
+        mam_section_label: 'MOET OOK VOLDOEN AAN',
+        mam_and_label: 'EN',
+        mam_and_connector: '+ EN',
+        mam_attr_placeholder: 'Attribuut — bijv. Skills, Groepen, Job title',
+        mam_values_placeholder: 'Waardes, gescheiden door komma\'s',
+        mam_delete_title: 'Verwijder dit criterium',
+        mam_add_button: '+ Must also match toevoegen',
+
+        // Business KPIs
+        biz_title: 'Business KPI\'s',
+        biz_subtitle: 'Commerciële doelen van de klant — in te vullen door de klant zelf via de deel-link. Max. CAC en ROAS-target worden automatisch berekend.',
+        biz_col_kpi: 'Business KPI',
+        biz_col_value: 'Waarde',
+        biz_col_explanation: 'Uitleg',
+        biz_row_product_value: 'Productwaarde',
+        biz_row_product_value_unit: '€ per sale/lead',
+        biz_row_product_value_exp: 'Wat levert één nieuwe klant, sale of lead je gemiddeld op? Bijvoorbeeld: een cursus van € 500, of een contract van € 2.000 per jaar.',
+        biz_row_margin: 'Winstmarge',
+        biz_row_margin_unit: '% (optioneel)',
+        biz_row_margin_exp: 'Jouw bruto winstmarge op de productwaarde — dus wat er per klant overblijft na inkoop/productkosten, vóór advertentiekosten. Vind je dit te gevoelig om te delen? Laat \'m gewoon leeg — dan tonen we de Max. CAC niet, en werken we alleen met de Geplande CAC en ROAS.',
+        biz_row_goal: 'Doel',
+        biz_row_goal_unit: 'aantal',
+        biz_row_goal_exp: 'Hoeveel nieuwe sales of leads wil je uit deze campagne halen? Dit is je zakelijke doelstelling — bijv. 25 nieuwe klanten.',
+        biz_row_budget: 'Totaal campagnebudget',
+        biz_row_budget_unit: '€',
+        biz_row_budget_exp: 'Het totale advertentiebudget voor de volledige looptijd van deze campagne. Bijv. 3 maanden × € 2.500 = € 7.500. Dit vormt de basis voor CAC en ROAS.',
+        biz_row_planned_cac: 'Geplande CAC',
+        biz_row_planned_cac_unit: '€ per klant',
+        biz_row_planned_cac_exp: '<strong>Customer Acquisition Cost</strong> — wat je op basis van dit plan per nieuwe klant uitgeeft. Berekend als Budget ÷ Doel. Dit is je <em>verwachte</em> kost per klant, niet per se het maximum.',
+        biz_row_max_cac: 'Max. CAC',
+        biz_row_max_cac_unit: '€ per klant',
+        biz_row_max_cac_exp: 'Het <strong>absolute plafond</strong>: tot hier kun je per klant uitgeven voordat je verlies draait. Berekend als Productwaarde × Winstmarge. Ligt je Geplande CAC erboven → verlies. Eronder → winst. <em>Alleen zichtbaar als je winstmarge invult.</em>',
+        biz_row_roas: 'ROAS-target',
+        biz_row_roas_unit: '×',
+        biz_row_roas_exp: '<strong>Return on Ad Spend</strong> — hoeveel euro omzet je terugverdient per euro advertentiebudget. Een ROAS van 3× betekent: voor elke € 1 ad-kosten komt er € 3 omzet binnen.',
+
+        // Campaign KPIs section
+        campaign_kpis_title: 'Campaign KPI\'s',
+        campaign_kpis_subtitle: 'Prestaties van de advertentiecampagne — gevuld door Agensea of via LinkedIn CSV-import.',
+
+        // Benchmark
+        benchmark_toggle: 'LinkedIn Ads benchmarks per branche',
+        benchmark_select_branche: 'SELECTEER BRANCHE',
+        benchmark_choose: '— Kies een branche —',
+        benchmark_apply: 'Gebruik als target',
+        benchmark_apply_confirm: (n) => `Wil je de "Goed" benchmarks van ${n} overnemen als targets?`,
+        benchmark_col_kpi: 'KPI',
+        benchmark_col_low: 'Laag',
+        benchmark_col_avg: 'Gemiddeld',
+        benchmark_col_good: 'Goed',
+        benchmark_col_excellent: 'Excellent',
+        benchmark_disclaimer: 'Benchmarks zijn gebaseerd op algemene LinkedIn Ads marktdata. Werkelijke resultaten variëren per doelgroep, regio, budget en advertentietype.',
+
+        // KPI table
+        kpi_col_kpi: 'KPI',
+        kpi_col_target: 'Target',
+        kpi_col_actual: 'Werkelijk',
+        kpi_col_status: 'Status',
+        kpi_col_deviation: 'Afwijking',
+        kpi_col_explanation: 'Toelichting',
+        kpi_col_action: 'Actie / Advies',
+
+        // Status
+        status_on_target: 'Op target',
+        status_attention: 'Aandacht',
+        status_critical: 'Kritiek',
+        status_no_data: 'Geen data',
+        stat_on_target: 'Op target',
+        stat_attention: 'Aandachtspunt',
+        stat_critical: 'Kritiek',
+
+        // Summary
+        summary_title: 'Samenvatting',
+        summary_loading: '— Laden',
+        summary_no_data: 'Geen data',
+        summary_no_data_text: 'Vul de werkelijke KPI-waarden in om een automatische samenvatting en analyse te genereren.',
+        summary_empty_placeholder: 'Vul de KPI-waarden in om een samenvatting te genereren.',
+        summary_good_badge: 'Goed op koers',
+        summary_critical_badge: 'Actie vereist',
+        summary_warning_badge: 'Aandachtspunten',
+        summary_good: (n, g, t, p) => `De campagne "${n}" presteert sterk. ${g} van de ${t} KPI's zitten op of boven target.${p} De huidige strategie werkt — focus op opschalen en het vasthouden van deze resultaten.`,
+        summary_critical: (n, r, o, p) => `De campagne "${n}" vraagt directe aandacht. ${r} KPI('s) scoren kritiek en ${o} vragen aandacht.${p} Bekijk onderstaande actiepunten per KPI en prioriteer de optimalisaties met de meeste impact.`,
+        summary_warning: (n, g, other, p) => `De campagne "${n}" presteert gemiddeld. ${g} KPI('s) op target, maar ${other} vragen aandacht.${p} Focus op de oranje en rode KPI's hieronder voor gerichte optimalisatie.`,
+        summary_period_context: (pct, e, t) => ` We zitten op ${pct}% van de looptijd (dag ${e} van ${t}).`,
+
+        explanation_no_actual: 'Vul de werkelijke waarde in.',
+
+        // Footer
+        footer_note: 'Gegenereerd door <strong>Agensea</strong> — Klik op Target of Werkelijk waarden om aan te passen.',
+
+        // Add modal
+        modal_add_title: 'Nieuwe campagne toevoegen',
+        modal_client: 'KLANTNAAM',
+        modal_client_ph: 'bijv. Contemplas',
+        modal_campaign: 'CAMPAGNENAAM',
+        modal_campaign_ph: 'bijv. LinkedIn Ads — Leadgeneratie Q2',
+        modal_type: 'CAMPAGNETYPE',
+        modal_start: 'STARTDATUM',
+        modal_duration: 'LOOPTIJD',
+        modal_duration_ph: '—',
+        modal_weeks: 'weken',
+        modal_months: 'maanden',
+        modal_or_end: 'OF EINDDATUM',
+        btn_cancel: 'Annuleren',
+        btn_add: 'Toevoegen',
+
+        // Share modal
+        share_title: 'Delen met klant',
+        share_desc: 'Kopieer onderstaande link en stuur deze naar je klant. De klant ziet een schone, read-only versie van de rapportage.',
+        btn_copy: 'Kopieer',
+        btn_close: 'Sluiten',
+        share_copied: 'Link gekopieerd!',
+
+        // Delete / confirm
+        delete_min_one: 'Je moet minimaal één campagne behouden.',
+        delete_confirm: (n) => `Weet je zeker dat je "${n}" wilt verwijderen?`,
+
+        // Campaign types
+        ctype_leadgen: 'Leadgeneratie',
+        ctype_leadgen_option: 'Leadgeneratie — leads via formulieren of LP\'s',
+        ctype_awareness: 'Awareness / Branding',
+        ctype_awareness_option: 'Awareness / Branding — bereik, engagement, volgers',
+        ctype_traffic: 'Website Traffic',
+        ctype_traffic_option: 'Website Traffic — bezoekers naar website',
+        ctype_video: 'Video Views',
+        ctype_video_option: 'Video Views — videoweergaven en engagement',
+
+        // CSV import
+        toast_no_csv: 'Geen herkenbare KPI-kolommen gevonden in dit CSV-bestand.',
+        toast_csv_ok: (n, r, k) => `${n} KPI's geïmporteerd uit ${r} rij(en): ${k}`,
+    },
+
+    en: {
+        // Nav / top-level
+        nav_dashboard: 'Dashboard',
+        nav_campaign: 'Campaign',
+        app_label: 'KPI Tracker',
+
+        // Dashboard
+        dashboard_title: 'Dashboard',
+        dashboard_subtitle: 'Overview of all campaigns per client',
+        btn_new_campaign: '+ New campaign',
+        dashboard_empty: 'No campaigns yet. Add your first campaign to get started.',
+        without_client: 'No client',
+        campaigns_one: 'campaign',
+        campaigns_many: 'campaigns',
+        card_no_data: 'No data yet',
+        period_ended: 'Ended',
+        period_starts_in: (d) => `Starts in ${d}d`,
+        period_day_of: (e, t) => `Day ${e}/${t}`,
+
+        // Detail top
+        btn_back_dashboard: '← Dashboard',
+        btn_upload_csv: 'LinkedIn CSV',
+        btn_share_client: 'Share with client',
+        btn_delete_campaign: 'Delete',
+        btn_export_pdf: 'Export PDF',
+        btn_download_png: 'Download as PNG',
+        client_label: 'Client name',
+        campaign_label: 'Campaign name',
+
+        // Period
+        label_start_date: 'START DATE',
+        label_end_date: 'END DATE',
+        progress_set_period: 'Set campaign period',
+        progress_set_dates: 'Set start and end date',
+        progress_period_note_empty: 'Without a period, all targets are compared against their final value.',
+        progress_ended: (d) => `Campaign ended — ran for ${d} days`,
+        progress_ended_note: 'Campaign is complete. All targets are compared at their final value.',
+        progress_starts_in: (d) => `Campaign starts in ${d} days`,
+        progress_not_started: 'Campaign has not started yet.',
+        progress_day_of: (e, t, r) => `Day ${e} of ${t} — ${r} days left`,
+        progress_active_note: 'All KPIs are ratio-based and compared directly to the full target.',
+        default_period_note: 'All current KPIs are ratio-based and compared directly to the full target, regardless of duration.',
+
+        // Context
+        label_audience_size: 'AUDIENCE SIZE',
+        label_monthly_budget: 'MONTHLY BUDGET',
+        label_platform: 'PLATFORM',
+        label_notes: 'NOTES',
+        placeholder_audience_size: 'e.g. 45,000',
+        placeholder_monthly_budget: 'e.g. € 2,500',
+        placeholder_platform: 'e.g. LinkedIn Ads',
+        placeholder_notes: 'e.g. Focus on decision makers, IT, Netherlands',
+
+        // Audiences
+        audiences_title: 'Audiences',
+        audiences_subtitle: 'The targeting used in this campaign. Add a card per LinkedIn audience with the essentials — no need to mirror the full must-also-match tree.',
+        audiences_subtitle_ro: 'The targeting used in this campaign.',
+        btn_add_audience: '+ Add audience',
+        audience_empty: 'No audiences yet. Click "+ Add audience".',
+        audience_name_placeholder: 'Audience name — e.g. Decision Makers NL',
+        audience_delete_title: 'Delete audience',
+        audience_delete_confirm: 'Delete this audience?',
+        audience_default_name: 'Audience',
+        audience_field_location: 'LOCATION',
+        audience_field_job_functions: 'JOB FUNCTIONS / TITLES',
+        audience_field_seniority: 'SENIORITY',
+        audience_field_company_size: 'COMPANY SIZE',
+        audience_field_industry: 'INDUSTRY',
+        audience_field_location_ph: 'e.g. Netherlands, Belgium',
+        audience_field_job_functions_ph: 'e.g. Marketing, Sales, CEO',
+        audience_field_seniority_ph: 'e.g. Director, VP, CXO',
+        audience_field_company_size_ph: 'e.g. 51-200, 201-500',
+        audience_field_industry_ph: 'e.g. IT, SaaS, Finance',
+        audience_estimated_size: 'ESTIMATED SIZE',
+        audience_estimated_size_placeholder: 'e.g. 45,000',
+        audience_notes: 'EXCLUSIONS / NOTES',
+        audience_notes_placeholder: 'e.g. competitor exclusion, blacklist',
+        btn_download_audiences: 'Download audiences as PNG',
+
+        // Must also match
+        mam_section_label: 'MUST ALSO MATCH',
+        mam_and_label: 'AND',
+        mam_and_connector: '+ AND',
+        mam_attr_placeholder: 'Attribute — e.g. Skills, Groups, Job title',
+        mam_values_placeholder: 'Values, comma-separated',
+        mam_delete_title: 'Remove this criterion',
+        mam_add_button: '+ Add must also match',
+
+        // Business KPIs
+        biz_title: 'Business KPIs',
+        biz_subtitle: 'The client\'s commercial goals — to be filled in by the client via the share link. Max. CAC and ROAS target are calculated automatically.',
+        biz_col_kpi: 'Business KPI',
+        biz_col_value: 'Value',
+        biz_col_explanation: 'Explanation',
+        biz_row_product_value: 'Product value',
+        biz_row_product_value_unit: '€ per sale/lead',
+        biz_row_product_value_exp: 'What does one new customer, sale or lead bring in on average? For example: a course at € 500, or a € 2,000 / year contract.',
+        biz_row_margin: 'Profit margin',
+        biz_row_margin_unit: '% (optional)',
+        biz_row_margin_exp: 'Your gross profit margin on the product value — what remains per customer after cost of goods, before advertising costs. Finds this too sensitive to share? Just leave it blank — we then skip Max. CAC and only show Planned CAC and ROAS.',
+        biz_row_goal: 'Goal',
+        biz_row_goal_unit: 'count',
+        biz_row_goal_exp: 'How many new sales or leads do you want from this campaign? This is your business objective — e.g. 25 new customers.',
+        biz_row_budget: 'Total campaign budget',
+        biz_row_budget_unit: '€',
+        biz_row_budget_exp: 'The total ad budget for the full duration of this campaign. E.g. 3 months × € 2,500 = € 7,500. This is the basis for CAC and ROAS.',
+        biz_row_planned_cac: 'Planned CAC',
+        biz_row_planned_cac_unit: '€ per customer',
+        biz_row_planned_cac_exp: '<strong>Customer Acquisition Cost</strong> — what you spend per new customer based on this plan. Calculated as Budget ÷ Goal. This is your <em>expected</em> cost per customer, not necessarily the ceiling.',
+        biz_row_max_cac: 'Max. CAC',
+        biz_row_max_cac_unit: '€ per customer',
+        biz_row_max_cac_exp: 'The <strong>absolute ceiling</strong>: above this you start losing money per customer. Calculated as Product value × Profit margin. If your Planned CAC is above → loss. Below → profit. <em>Only shown when profit margin is filled in.</em>',
+        biz_row_roas: 'ROAS target',
+        biz_row_roas_unit: '×',
+        biz_row_roas_exp: '<strong>Return on Ad Spend</strong> — how many euros of revenue you earn per euro of ad spend. A ROAS of 3× means: for every € 1 in ad costs, € 3 in revenue comes back.',
+
+        // Campaign KPIs section
+        campaign_kpis_title: 'Campaign KPIs',
+        campaign_kpis_subtitle: 'Performance of the ad campaign — filled in by Agensea or via LinkedIn CSV import.',
+
+        // Benchmark
+        benchmark_toggle: 'LinkedIn Ads benchmarks per industry',
+        benchmark_select_branche: 'SELECT INDUSTRY',
+        benchmark_choose: '— Choose an industry —',
+        benchmark_apply: 'Use as target',
+        benchmark_apply_confirm: (n) => `Apply the "Good" benchmarks from ${n} as targets?`,
+        benchmark_col_kpi: 'KPI',
+        benchmark_col_low: 'Low',
+        benchmark_col_avg: 'Average',
+        benchmark_col_good: 'Good',
+        benchmark_col_excellent: 'Excellent',
+        benchmark_disclaimer: 'Benchmarks are based on general LinkedIn Ads market data. Actual results vary by audience, region, budget and ad type.',
+
+        // KPI table
+        kpi_col_kpi: 'KPI',
+        kpi_col_target: 'Target',
+        kpi_col_actual: 'Actual',
+        kpi_col_status: 'Status',
+        kpi_col_deviation: 'Deviation',
+        kpi_col_explanation: 'Explanation',
+        kpi_col_action: 'Action / Advice',
+
+        // Status
+        status_on_target: 'On target',
+        status_attention: 'Attention',
+        status_critical: 'Critical',
+        status_no_data: 'No data',
+        stat_on_target: 'On target',
+        stat_attention: 'Attention',
+        stat_critical: 'Critical',
+
+        // Summary
+        summary_title: 'Summary',
+        summary_loading: '— Loading',
+        summary_no_data: 'No data',
+        summary_no_data_text: 'Fill in the actual KPI values to generate an automatic summary and analysis.',
+        summary_empty_placeholder: 'Fill in the KPI values to generate a summary.',
+        summary_good_badge: 'On track',
+        summary_critical_badge: 'Action required',
+        summary_warning_badge: 'Attention points',
+        summary_good: (n, g, t, p) => `Campaign "${n}" is performing strongly. ${g} out of ${t} KPIs are on or above target.${p} The current strategy is working — focus on scaling and maintaining these results.`,
+        summary_critical: (n, r, o, p) => `Campaign "${n}" needs immediate attention. ${r} KPI(s) are critical and ${o} need attention.${p} Review the action items per KPI below and prioritize the optimizations with the biggest impact.`,
+        summary_warning: (n, g, other, p) => `Campaign "${n}" is performing average. ${g} KPI(s) on target, but ${other} need attention.${p} Focus on the orange and red KPIs below for targeted optimization.`,
+        summary_period_context: (pct, e, t) => ` We are at ${pct}% of the campaign (day ${e} of ${t}).`,
+
+        explanation_no_actual: 'Fill in the actual value.',
+
+        // Footer
+        footer_note: 'Generated by <strong>Agensea</strong> — Click on Target or Actual values to edit.',
+
+        // Add modal
+        modal_add_title: 'Add new campaign',
+        modal_client: 'CLIENT NAME',
+        modal_client_ph: 'e.g. Contemplas',
+        modal_campaign: 'CAMPAIGN NAME',
+        modal_campaign_ph: 'e.g. LinkedIn Ads — Leadgen Q2',
+        modal_type: 'CAMPAIGN TYPE',
+        modal_start: 'START DATE',
+        modal_duration: 'DURATION',
+        modal_duration_ph: '—',
+        modal_weeks: 'weeks',
+        modal_months: 'months',
+        modal_or_end: 'OR END DATE',
+        btn_cancel: 'Cancel',
+        btn_add: 'Add',
+
+        // Share modal
+        share_title: 'Share with client',
+        share_desc: 'Copy the link below and send it to your client. The client sees a clean, read-only version of the report.',
+        btn_copy: 'Copy',
+        btn_close: 'Close',
+        share_copied: 'Link copied!',
+
+        // Delete / confirm
+        delete_min_one: 'You must keep at least one campaign.',
+        delete_confirm: (n) => `Are you sure you want to delete "${n}"?`,
+
+        // Campaign types
+        ctype_leadgen: 'Lead generation',
+        ctype_leadgen_option: 'Lead generation — leads via forms or landing pages',
+        ctype_awareness: 'Awareness / Branding',
+        ctype_awareness_option: 'Awareness / Branding — reach, engagement, followers',
+        ctype_traffic: 'Website Traffic',
+        ctype_traffic_option: 'Website Traffic — visitors to the website',
+        ctype_video: 'Video Views',
+        ctype_video_option: 'Video Views — video plays and engagement',
+
+        // CSV import
+        toast_no_csv: 'No recognisable KPI columns found in this CSV file.',
+        toast_csv_ok: (n, r, k) => `${n} KPIs imported from ${r} row(s): ${k}`,
+    },
+};
+
+let currentLang = (typeof localStorage !== 'undefined' && localStorage.getItem('agensea_lang')) || 'nl';
+
+function t(key, ...args) {
+    const dict = I18N[currentLang] || I18N.nl;
+    const val = dict[key];
+    if (typeof val === 'function') return val(...args);
+    if (val !== undefined) return val;
+    const fallback = I18N.nl[key];
+    if (typeof fallback === 'function') return fallback(...args);
+    return fallback !== undefined ? fallback : key;
+}
+
+function setLang(lang) {
+    if (!I18N[lang]) return;
+    currentLang = lang;
+    try { localStorage.setItem('agensea_lang', lang); } catch (e) {}
+    applyStaticTranslations();
+    if (currentView === 'detail') {
+        showDetail(activeCampaignIndex);
+    } else {
+        renderDashboard();
+    }
+    // Update language switch UI
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === currentLang);
+    });
+}
+
+// Apply translations to static HTML elements marked with data-i18n / data-i18n-ph
+function applyStaticTranslations() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.textContent = t(el.dataset.i18n);
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+        el.placeholder = t(el.dataset.i18nPh);
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(el => {
+        el.innerHTML = t(el.dataset.i18nHtml);
+    });
+    // Populate campaign type <option>s
+    const typeSel = document.getElementById('newCampaignType');
+    if (typeSel) {
+        [...typeSel.options].forEach(opt => {
+            const key = opt.dataset.i18n;
+            if (key) opt.textContent = t(key);
+        });
+    }
+    const durSel = document.getElementById('newCampaignDurationUnit');
+    if (durSel) {
+        [...durSel.options].forEach(opt => {
+            const key = opt.dataset.i18n;
+            if (key) opt.textContent = t(key);
+        });
+    }
+    // Benchmark "choose" option
+    const benchSel = document.getElementById('benchmarkBranch');
+    if (benchSel && benchSel.options.length > 0) {
+        benchSel.options[0].textContent = t('benchmark_choose');
+    }
+}
+
 // ── Supabase Client ───────────────────────────
 
 const SUPABASE_URL = 'https://lkyyggkzdptfvlgwjeur.supabase.co';
@@ -173,10 +662,32 @@ const CAMPAIGN_TYPES = {
     },
 };
 
+// KPI name / unit overrides per language (English only — NL is the source)
+const KPI_EN = {
+    ctr:             { name: 'CTR',             unit: '%' },
+    cpc:             { name: 'CPC',             unit: '€' },
+    cpm:             { name: 'CPM',             unit: '€' },
+    conversieratio:  { name: 'Conversion rate', unit: '%' },
+    cpl:             { name: 'CPL',             unit: '€' },
+    video_view_rate: { name: 'Video view rate', unit: '%' },
+    engagement_rate: { name: 'Engagement rate', unit: '%' },
+    volgers:         { name: 'New followers',   unit: 'followers' },
+    cpv:             { name: 'CPV',             unit: '€' },
+    bounce_rate:     { name: 'Bounce rate',     unit: '%' },
+    time_on_page:    { name: 'Time on page',    unit: 'sec' },
+};
+
+function localizedKpi(kpi) {
+    if (currentLang === 'en' && KPI_EN[kpi.id]) {
+        return { ...kpi, name: KPI_EN[kpi.id].name, unit: KPI_EN[kpi.id].unit };
+    }
+    return kpi;
+}
+
 // Helper to get KPI definitions for a campaign
 function getKPIsForCampaign(campaign) {
     const type = CAMPAIGN_TYPES[campaign.campaignType] || CAMPAIGN_TYPES.leadgen;
-    return type.kpiIds.map(id => ALL_KPIS[id]).filter(Boolean);
+    return type.kpiIds.map(id => ALL_KPIS[id]).filter(Boolean).map(localizedKpi);
 }
 
 // Legacy support: convert old KPI_DEFINITIONS references
@@ -308,6 +819,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         try { await saveState(); } catch (e) { console.warn('Save failed:', e); }
     }
     initBenchmarks();
+    applyStaticTranslations();
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === currentLang);
+        btn.addEventListener('click', () => setLang(btn.dataset.lang));
+    });
     renderDashboard();
     bindEvents();
 });
@@ -375,8 +891,8 @@ function showDetail(index) {
 
     // Show campaign type badge
     const typeLabel = document.getElementById('detailTypeLabel');
-    const typeInfo = CAMPAIGN_TYPES[campaign.campaignType] || CAMPAIGN_TYPES.leadgen;
-    if (typeLabel) typeLabel.textContent = typeInfo.name;
+    const typeKey = 'ctype_' + (CAMPAIGN_TYPES[campaign.campaignType] ? campaign.campaignType : 'leadgen');
+    if (typeLabel) typeLabel.textContent = t(typeKey);
 
     renderPeriodBar();
     renderContext();
@@ -389,11 +905,11 @@ function showDetail(index) {
 // ── Audiences ─────────────────────────────────
 
 const AUDIENCE_FIELDS = [
-    { key: 'location',     label: 'Locatie',            placeholder: 'bijv. Nederland, België' },
-    { key: 'jobFunctions', label: 'Functies / titels',  placeholder: 'bijv. Marketing, Sales, CEO' },
-    { key: 'seniority',    label: 'Senioriteit',        placeholder: 'bijv. Director, VP, CXO' },
-    { key: 'companySize',  label: 'Bedrijfsgrootte',    placeholder: 'bijv. 51-200, 201-500' },
-    { key: 'industry',     label: 'Branche',            placeholder: 'bijv. IT, SaaS, Financiën' },
+    { key: 'location',     labelKey: 'audience_field_location',      phKey: 'audience_field_location_ph' },
+    { key: 'jobFunctions', labelKey: 'audience_field_job_functions', phKey: 'audience_field_job_functions_ph' },
+    { key: 'seniority',    labelKey: 'audience_field_seniority',     phKey: 'audience_field_seniority_ph' },
+    { key: 'companySize',  labelKey: 'audience_field_company_size',  phKey: 'audience_field_company_size_ph' },
+    { key: 'industry',     labelKey: 'audience_field_industry',      phKey: 'audience_field_industry_ph' },
 ];
 
 function createAudience() {
@@ -404,38 +920,29 @@ function createAudience() {
         seniority: '',
         companySize: '',
         industry: '',
-        mustAlsoMatch: '',
+        mustAlsoMatchBlocks: [],
         estimatedSize: '',
         notes: '',
     };
 }
 
-function parseMustAlsoMatch(str) {
-    if (!str) return [];
-    return String(str).split(/\n/).map(line => {
-        const idx = line.indexOf(':');
-        if (idx === -1) {
-            const trimmed = line.trim();
-            if (!trimmed) return null;
-            return { label: '', values: parseChips(trimmed) };
-        }
-        const label = line.slice(0, idx).trim();
-        const rest = line.slice(idx + 1);
-        const values = parseChips(rest);
-        if (!label && values.length === 0) return null;
-        return { label, values };
-    }).filter(Boolean);
-}
-
-function renderMustAlsoMatchBlocks(str) {
-    const blocks = parseMustAlsoMatch(str);
-    if (blocks.length === 0) return '';
-    return blocks.map(b => `
-        <div class="mam-block">
-            ${b.label ? `<span class="mam-label">${escapeHtml(b.label)}</span>` : ''}
-            <div class="chip-row">${b.values.map(v => `<span class="chip">${escapeHtml(v)}</span>`).join('')}</div>
-        </div>
-    `).join('');
+// Migrate legacy `mustAlsoMatch` string into structured blocks
+function migrateAudience(a) {
+    if (!Array.isArray(a.mustAlsoMatchBlocks)) a.mustAlsoMatchBlocks = [];
+    if (typeof a.mustAlsoMatch === 'string' && a.mustAlsoMatch.trim()) {
+        String(a.mustAlsoMatch).split(/\n/).forEach(line => {
+            const idx = line.indexOf(':');
+            let attribute = '', values = '';
+            if (idx === -1) {
+                values = line.trim();
+            } else {
+                attribute = line.slice(0, idx).trim();
+                values = line.slice(idx + 1).trim();
+            }
+            if (attribute || values) a.mustAlsoMatchBlocks.push({ attribute, values });
+        });
+        delete a.mustAlsoMatch;
+    }
 }
 
 function parseChips(str) {
@@ -456,7 +963,7 @@ function renderAudiences() {
     if (campaign.audiences.length === 0) {
         const empty = document.createElement('p');
         empty.className = 'audience-empty';
-        empty.textContent = 'Nog geen doelgroepen. Klik op "+ Doelgroep toevoegen".';
+        empty.textContent = t('audience_empty');
         list.appendChild(empty);
         return;
     }
@@ -474,32 +981,44 @@ function buildAudienceCard(aud, index) {
         const val = aud[f.key] || '';
         return `
             <div class="audience-field">
-                <label class="label-small">${f.label.toUpperCase()}</label>
-                <input type="text" class="audience-input" data-aud-index="${index}" data-aud-key="${f.key}" placeholder="${f.placeholder}" value="${escapeHtml(val)}">
-                <div class="chip-row">${parseChips(val).map(t => `<span class="chip">${escapeHtml(t)}</span>`).join('')}</div>
+                <label class="label-small">${t(f.labelKey)}</label>
+                <input type="text" class="audience-input" data-aud-index="${index}" data-aud-key="${f.key}" placeholder="${t(f.phKey)}" value="${escapeHtml(val)}">
+                <div class="chip-row">${parseChips(val).map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div>
             </div>
         `;
     }).join('');
 
+    const mamBlocksHtml = (aud.mustAlsoMatchBlocks || []).map((b, bi) => `
+        <div class="mam-block-edit" data-aud-index="${index}" data-mam-index="${bi}">
+            <div class="mam-block-header">
+                <span class="mam-connector">${bi === 0 ? t('mam_and_label') : t('mam_and_connector')}</span>
+                <input type="text" class="mam-attr-input" data-aud-index="${index}" data-mam-index="${bi}" data-mam-key="attribute" placeholder="${t('mam_attr_placeholder')}" value="${escapeHtml(b.attribute || '')}">
+                <button class="mam-delete-btn" data-aud-index="${index}" data-mam-index="${bi}" title="${t('mam_delete_title')}">×</button>
+            </div>
+            <input type="text" class="mam-values-input" data-aud-index="${index}" data-mam-index="${bi}" data-mam-key="values" placeholder="${t('mam_values_placeholder')}" value="${escapeHtml(b.values || '')}">
+            <div class="chip-row">${parseChips(b.values || '').map(v => `<span class="chip">${escapeHtml(v)}</span>`).join('')}</div>
+        </div>
+    `).join('');
+
     card.innerHTML = `
         <div class="audience-card-header">
-            <input type="text" class="audience-name-input" data-aud-index="${index}" data-aud-key="name" placeholder="Doelgroepnaam — bijv. Decision Makers NL" value="${escapeHtml(aud.name || '')}">
-            <button class="audience-delete-btn" data-aud-index="${index}" title="Verwijder doelgroep">×</button>
+            <input type="text" class="audience-name-input" data-aud-index="${index}" data-aud-key="name" placeholder="${t('audience_name_placeholder')}" value="${escapeHtml(aud.name || '')}">
+            <button class="audience-delete-btn" data-aud-index="${index}" title="${t('audience_delete_title')}">×</button>
         </div>
         <div class="audience-grid">${fieldsHtml}</div>
         <div class="audience-mam">
-            <label class="label-small">MOET OOK VOLDOEN AAN</label>
-            <textarea class="audience-textarea" data-aud-index="${index}" data-aud-key="mustAlsoMatch" rows="3" placeholder="Eén regel per criterium, bijv.:&#10;Groepen: LinkedIn Ads NL, Growth Hackers&#10;Skills: SEO, Google Ads&#10;Job title: Growth, Performance Marketeer">${escapeHtml(aud.mustAlsoMatch || '')}</textarea>
-            <div class="mam-preview">${renderMustAlsoMatchBlocks(aud.mustAlsoMatch || '')}</div>
+            <label class="label-small">${t('mam_section_label')}</label>
+            <div class="mam-blocks-list">${mamBlocksHtml}</div>
+            <button class="mam-add-btn" data-aud-index="${index}">${t('mam_add_button')}</button>
         </div>
         <div class="audience-footer">
             <div class="audience-field audience-field-small">
-                <label class="label-small">GESCHATTE GROOTTE</label>
-                <input type="text" class="audience-input" data-aud-index="${index}" data-aud-key="estimatedSize" placeholder="bijv. 45.000" value="${escapeHtml(aud.estimatedSize || '')}">
+                <label class="label-small">${t('audience_estimated_size')}</label>
+                <input type="text" class="audience-input" data-aud-index="${index}" data-aud-key="estimatedSize" placeholder="${t('audience_estimated_size_placeholder')}" value="${escapeHtml(aud.estimatedSize || '')}">
             </div>
             <div class="audience-field audience-field-wide">
-                <label class="label-small">UITSLUITINGEN / NOTITIES</label>
-                <input type="text" class="audience-input" data-aud-index="${index}" data-aud-key="notes" placeholder="bijv. exclusie van concurrenten, blacklist" value="${escapeHtml(aud.notes || '')}">
+                <label class="label-small">${t('audience_notes')}</label>
+                <input type="text" class="audience-input" data-aud-index="${index}" data-aud-key="notes" placeholder="${t('audience_notes_placeholder')}" value="${escapeHtml(aud.notes || '')}">
             </div>
         </div>
     `;
@@ -509,27 +1028,97 @@ function buildAudienceCard(aud, index) {
         input.addEventListener('blur', onAudienceInputBlur);
         input.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
     });
-    const mam = card.querySelector('.audience-textarea');
-    if (mam) {
-        mam.addEventListener('blur', (e) => {
-            const i = parseInt(e.target.dataset.audIndex);
+
+    // Must-also-match block inputs
+    card.querySelectorAll('.mam-attr-input, .mam-values-input').forEach(input => {
+        input.addEventListener('blur', onMamBlockInputBlur);
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
+    });
+    // Must-also-match delete buttons
+    card.querySelectorAll('.mam-delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const i = parseInt(e.currentTarget.dataset.audIndex);
+            const bi = parseInt(e.currentTarget.dataset.mamIndex);
             const campaign = getActiveCampaign();
             if (!campaign.audiences[i]) return;
-            campaign.audiences[i].mustAlsoMatch = e.target.value;
-            const preview = e.target.parentElement.querySelector('.mam-preview');
-            if (preview) preview.innerHTML = renderMustAlsoMatchBlocks(e.target.value);
+            campaign.audiences[i].mustAlsoMatchBlocks.splice(bi, 1);
+            renderAudiences();
             saveState();
         });
-    }
+    });
+    // Add must-also-match block
+    card.querySelector('.mam-add-btn').addEventListener('click', (e) => {
+        const i = parseInt(e.currentTarget.dataset.audIndex);
+        const campaign = getActiveCampaign();
+        if (!campaign.audiences[i]) return;
+        if (!Array.isArray(campaign.audiences[i].mustAlsoMatchBlocks)) {
+            campaign.audiences[i].mustAlsoMatchBlocks = [];
+        }
+        campaign.audiences[i].mustAlsoMatchBlocks.push({ attribute: '', values: '' });
+        renderAudiences();
+        saveState();
+        // Focus the new attribute input
+        const newCard = document.querySelectorAll('.audience-card')[i];
+        const inputs = newCard && newCard.querySelectorAll('.mam-attr-input');
+        if (inputs && inputs.length) inputs[inputs.length - 1].focus();
+    });
+
     card.querySelector('.audience-delete-btn').addEventListener('click', (e) => {
         const i = parseInt(e.currentTarget.dataset.audIndex);
-        if (!confirm('Doelgroep verwijderen?')) return;
+        if (!confirm(t('audience_delete_confirm'))) return;
         getActiveCampaign().audiences.splice(i, 1);
         renderAudiences();
         saveState();
     });
 
     return card;
+}
+
+async function downloadAudiencesAsPng(selector, campaign) {
+    if (typeof html2canvas === 'undefined') {
+        alert('html2canvas not loaded');
+        return;
+    }
+    const el = document.querySelector(selector);
+    if (!el) return;
+    try {
+        const canvas = await html2canvas(el, {
+            backgroundColor: getComputedStyle(document.body).backgroundColor || '#ffffff',
+            scale: 2,
+            useCORS: true,
+            logging: false,
+        });
+        const link = document.createElement('a');
+        const safeName = (campaign && campaign.name ? campaign.name : 'audiences').replace(/[^a-z0-9-_ ]/gi, '').trim() || 'audiences';
+        link.download = `audiences-${safeName}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    } catch (e) {
+        console.warn('PNG export failed:', e);
+        alert('PNG export failed — see console.');
+    }
+}
+
+function onMamBlockInputBlur(e) {
+    const input = e.target;
+    const i = parseInt(input.dataset.audIndex);
+    const bi = parseInt(input.dataset.mamIndex);
+    const key = input.dataset.mamKey;
+    const campaign = getActiveCampaign();
+    if (!campaign.audiences[i] || !campaign.audiences[i].mustAlsoMatchBlocks[bi]) return;
+    campaign.audiences[i].mustAlsoMatchBlocks[bi][key] = input.value.trim();
+
+    // If values input, update chip row preview
+    if (key === 'values') {
+        const blockEl = input.closest('.mam-block-edit');
+        if (blockEl) {
+            const chipRow = blockEl.querySelector('.chip-row');
+            if (chipRow) {
+                chipRow.innerHTML = parseChips(input.value).map(v => `<span class="chip">${escapeHtml(v)}</span>`).join('');
+            }
+        }
+    }
+    saveState();
 }
 
 function onAudienceInputBlur(e) {
@@ -637,16 +1226,17 @@ function renderDashboard() {
 
     // Group by client
     const groups = {};
+    const noClientLabel = t('without_client');
     campaigns.forEach((c, i) => {
-        const client = c.client || 'Zonder klant';
+        const client = c.client || noClientLabel;
         if (!groups[client]) groups[client] = [];
         groups[client].push({ campaign: c, index: i });
     });
 
     // Sort clients alphabetically, "Zonder klant" last
     const sortedClients = Object.keys(groups).sort((a, b) => {
-        if (a === 'Zonder klant') return 1;
-        if (b === 'Zonder klant') return -1;
+        if (a === noClientLabel) return 1;
+        if (b === noClientLabel) return -1;
         return a.localeCompare(b);
     });
 
@@ -657,10 +1247,11 @@ function renderDashboard() {
         group.className = 'client-group';
 
         // Client header
+        const cCountLabel = items.length === 1 ? t('campaigns_one') : t('campaigns_many');
         group.innerHTML = `
             <div class="client-group-header">
                 <span class="client-name">${clientName}</span>
-                <span class="client-count">${items.length} campagne${items.length !== 1 ? 's' : ''}</span>
+                <span class="client-count">${items.length} ${cCountLabel}</span>
             </div>
         `;
 
@@ -674,9 +1265,9 @@ function renderDashboard() {
 
             let periodText = '';
             if (info) {
-                if (info.hasEnded) periodText = 'Afgelopen';
-                else if (!info.hasStarted) periodText = `Start over ${info.remainingDays}d`;
-                else periodText = `Dag ${info.elapsedDays}/${info.totalDays}`;
+                if (info.hasEnded) periodText = t('period_ended');
+                else if (!info.hasStarted) periodText = t('period_starts_in', info.remainingDays);
+                else periodText = t('period_day_of', info.elapsedDays, info.totalDays);
             } else if (campaign.startDate) {
                 periodText = formatDate(campaign.startDate);
             }
@@ -708,7 +1299,7 @@ function renderDashboard() {
                             <span class="card-stat"><span class="card-stat-dot green"></span>${counts.greens}</span>
                             <span class="card-stat"><span class="card-stat-dot orange"></span>${counts.oranges}</span>
                             <span class="card-stat"><span class="card-stat-dot red"></span>${counts.reds}</span>
-                        ` : '<span style="font-size:0.7rem;color:var(--muted);">Nog geen data</span>'}
+                        ` : `<span style="font-size:0.7rem;color:var(--muted);">${t('card_no_data')}</span>`}
                     </div>
                     <span class="card-arrow">&rarr;</span>
                 </div>
@@ -783,11 +1374,11 @@ function updateProgressBar() {
     const note = document.getElementById('periodNote');
 
     if (!info) {
-        label.textContent = 'Stel start- en einddatum in';
+        label.textContent = t('progress_set_dates');
         pct.textContent = '';
         fill.style.width = '0%';
         today.classList.remove('visible');
-        note.textContent = 'Zonder periode worden alle targets op eindwaarde vergeleken.';
+        note.textContent = t('progress_period_note_empty');
         return;
     }
 
@@ -799,14 +1390,14 @@ function updateProgressBar() {
     today.style.left = pctValue + '%';
 
     if (info.hasEnded) {
-        label.textContent = `Campagne afgelopen — ${info.totalDays} dagen gelopen`;
-        note.textContent = 'Campagne is afgerond. Alle targets worden op eindwaarde vergeleken.';
+        label.textContent = t('progress_ended', info.totalDays);
+        note.textContent = t('progress_ended_note');
     } else if (!info.hasStarted) {
-        label.textContent = `Campagne start over ${info.remainingDays} dagen`;
-        note.textContent = 'Campagne is nog niet gestart.';
+        label.textContent = t('progress_starts_in', info.remainingDays);
+        note.textContent = t('progress_not_started');
     } else {
-        label.textContent = `Dag ${info.elapsedDays} van ${info.totalDays} — nog ${info.remainingDays} dagen`;
-        note.textContent = 'Alle KPI\'s zijn ratio-gebaseerd en worden direct vergeleken met het volledige target.';
+        label.textContent = t('progress_day_of', info.elapsedDays, info.totalDays, info.remainingDays);
+        note.textContent = t('progress_active_note');
     }
 }
 
@@ -954,10 +1545,10 @@ function getStatusClass(deviation) {
 
 function getStatusLabel(statusClass) {
     switch (statusClass) {
-        case 'green': return 'Op target';
-        case 'orange': return 'Aandacht';
-        case 'red': return 'Kritiek';
-        default: return 'Geen data';
+        case 'green': return t('status_on_target');
+        case 'orange': return t('status_attention');
+        case 'red': return t('status_critical');
+        default: return t('status_no_data');
     }
 }
 
@@ -985,7 +1576,7 @@ function getDeviation(data, kpi, campaign) {
 
 function getExplanation(data, kpi, campaign) {
     const dev = calculateDeviation(data, kpi, campaign);
-    if (dev === null) return '<span style="color: var(--muted);">Vul de werkelijke waarde in.</span>';
+    if (dev === null) return `<span style="color: var(--muted);">${t('explanation_no_actual')}</span>`;
     return dev >= 0 ? kpi.explanations.good : kpi.explanations.bad;
 }
 
@@ -1011,13 +1602,13 @@ function updateSummary() {
     const info = getCampaignProgress(campaign);
     let periodContext = '';
     if (info && info.isActive) {
-        periodContext = ` We zitten op ${Math.round(info.progress * 100)}% van de looptijd (dag ${info.elapsedDays} van ${info.totalDays}).`;
+        periodContext = t('summary_period_context', Math.round(info.progress * 100), info.elapsedDays, info.totalDays);
     }
 
     if (counts.total === 0) {
         badge.className = 'summary-badge';
-        badge.textContent = 'Geen data';
-        text.textContent = 'Vul de werkelijke KPI-waarden in om een automatische samenvatting en analyse te genereren.';
+        badge.textContent = t('summary_no_data');
+        text.textContent = t('summary_no_data_text');
         return;
     }
 
@@ -1025,16 +1616,16 @@ function updateSummary() {
 
     if (score >= 0.8 && counts.reds === 0) {
         badge.className = 'summary-badge good';
-        badge.textContent = 'Goed op koers';
-        text.textContent = `De campagne "${campaign.name}" presteert sterk. ${counts.greens} van de ${counts.total} KPI's zitten op of boven target.${periodContext} De huidige strategie werkt — focus op opschalen en het vasthouden van deze resultaten.`;
+        badge.textContent = t('summary_good_badge');
+        text.textContent = t('summary_good', campaign.name, counts.greens, counts.total, periodContext);
     } else if (counts.reds >= 2 || score < 0.4) {
         badge.className = 'summary-badge critical';
-        badge.textContent = 'Actie vereist';
-        text.textContent = `De campagne "${campaign.name}" vraagt directe aandacht. ${counts.reds} KPI('s) scoren kritiek en ${counts.oranges} vragen aandacht.${periodContext} Bekijk onderstaande actiepunten per KPI en prioriteer de optimalisaties met de meeste impact.`;
+        badge.textContent = t('summary_critical_badge');
+        text.textContent = t('summary_critical', campaign.name, counts.reds, counts.oranges, periodContext);
     } else {
         badge.className = 'summary-badge warning';
-        badge.textContent = 'Aandachtspunten';
-        text.textContent = `De campagne "${campaign.name}" presteert gemiddeld. ${counts.greens} KPI('s) op target, maar ${counts.oranges + counts.reds} vragen aandacht.${periodContext} Focus op de oranje en rode KPI's hieronder voor gerichte optimalisatie.`;
+        badge.textContent = t('summary_warning_badge');
+        text.textContent = t('summary_warning', campaign.name, counts.greens, counts.oranges + counts.reds, periodContext);
     }
 }
 
@@ -1224,6 +1815,11 @@ function bindEvents() {
         });
     });
 
+    // Download audiences as PNG
+    document.getElementById('btnDownloadAudiences').addEventListener('click', () => {
+        downloadAudiencesAsPng('.audience-list', getActiveCampaign());
+    });
+
     // Add audience
     document.getElementById('btnAddAudience').addEventListener('click', () => {
         const campaign = getActiveCampaign();
@@ -1336,10 +1932,10 @@ function bindEvents() {
     // Delete campaign
     document.getElementById('btnDeleteCampaign').addEventListener('click', () => {
         if (campaigns.length <= 1) {
-            alert('Je moet minimaal één campagne behouden.');
+            alert(t('delete_min_one'));
             return;
         }
-        if (!confirm(`Weet je zeker dat je "${getActiveCampaign().name}" wilt verwijderen?`)) return;
+        if (!confirm(t('delete_confirm', getActiveCampaign().name))) return;
         const toDelete = getActiveCampaign();
         campaigns.splice(activeCampaignIndex, 1);
         activeCampaignIndex = Math.max(0, activeCampaignIndex - 1);
@@ -1365,7 +1961,7 @@ function bindEvents() {
         const linkInput = document.getElementById('shareLink');
         linkInput.select();
         navigator.clipboard.writeText(linkInput.value).then(() => {
-            document.getElementById('shareNote').textContent = 'Link gekopieerd!';
+            document.getElementById('shareNote').textContent = t('share_copied');
         });
     });
 
@@ -1387,7 +1983,7 @@ function bindEvents() {
             const result = parseCSV(evt.target.result);
 
             if (!result || Object.keys(result.values).length === 0) {
-                showToast('Geen herkenbare KPI-kolommen gevonden in dit CSV-bestand.', true);
+                showToast(t('toast_no_csv'), true);
                 e.target.value = '';
                 return;
             }
@@ -1401,7 +1997,7 @@ function bindEvents() {
                 return ALL_KPIS[id] ? ALL_KPIS[id].name : id;
             }).join(', ');
 
-            showToast(`${applied} KPI's geïmporteerd uit ${result.rowCount} rij(en): ${kpiNames}`);
+            showToast(t('toast_csv_ok', applied, result.rowCount, kpiNames));
             e.target.value = '';
         };
         reader.readAsText(file);
@@ -1421,7 +2017,7 @@ function bindEvents() {
         const branchKey = document.getElementById('benchmarkBranch').value;
         if (!branchKey) return;
         const branchName = BENCHMARKS[branchKey].name;
-        if (!confirm(`Wil je de "Goed" benchmarks van ${branchName} overnemen als targets?`)) return;
+        if (!confirm(t('benchmark_apply_confirm', branchName))) return;
         applyBenchmarkAsTarget(branchKey);
     });
 }
@@ -1603,6 +2199,7 @@ function migrateCampaign(c) {
     if (!c.shareToken) c.shareToken = generateShareToken();
     if (!c.context) c.context = { audienceSize: '', budget: '', platform: 'LinkedIn Ads', notes: '' };
     if (!Array.isArray(c.audiences)) c.audiences = [];
+    c.audiences.forEach(migrateAudience);
     if (!c.businessKpis) c.businessKpis = { productValue: null, margin: null, goal: null, budget: null };
     if (c.businessKpis.budget === undefined) c.businessKpis.budget = null;
     if (c.businessKpis.margin === undefined) c.businessKpis.margin = null;
