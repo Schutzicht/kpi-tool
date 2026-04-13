@@ -1484,11 +1484,8 @@ body {
 }
 
 /* ═══════════════════════════════════════════
-   BUSINESS KPIs — derived cell + save status
+   BUSINESS KPIs — save status
    ═══════════════════════════════════════════ */
-.biz-derived-cell {
-    color: var(--accent, #e4ff4a);
-}
 .biz-save-status {
     max-width: 1280px;
     margin: 12px auto 0;
